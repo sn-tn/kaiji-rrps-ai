@@ -1,61 +1,12 @@
 from enum import Enum
 import random
+from player import Player
 
 #representation of moveset
 class Move(Enum):
   ROCK=1
   PAPER=2
   SCISSORS=3
-
-'''
-    Representation of a player in a tournament
-    
-    Each player has a fixed move budget and number of lives
-'''
-class Player:
-    '''
-    Instantiation
-    Args:
-        player_id   (int) the id of each player
-        lives       (int) the number of lives the player starts with
-        budget      (int) the number of each move the players start with
-    '''
-    def __init__(self, player_id: int, lives: int = 3, budget: int = 4):
-        self.id     = player_id
-        self.lives  = lives
-        self.budget = {Move.ROCK: budget, Move.PAPER: budget, Move.SCISSORS: budget}
-
-    '''
-    A list containing the moves available
-
-    Return:
-        list[Move]
-    '''
-    def available_moves(self) -> list[Move]:
-        return [m for m, n in self.budget.items() if n > 0]
-
-    '''
-    Determines if the player is still alive
-
-    Return:
-        bool
-    '''
-    def is_alive(self) -> bool:
-        return self.lives > 0 and len(self.available_moves()) > 0
-
-    '''
-    Manages the move budget after an action
-    Args:
-        move (Move) the action taken by player
-    '''
-    def use_move(self, move: Move):
-        self.budget[move] -= 1
-
-    '''
-    Deducts a life
-    '''
-    def lose_life(self):
-        self.lives -= 1
 
 '''
     Method to determine winner of encounter
@@ -124,24 +75,35 @@ class Tournament:
         list[tuple[Player, Player]]
     '''
     def _pair_players(self) -> list[tuple[Player, Player]]:
-        alive = self._alive_players()
-        random.shuffle(alive)
-        return [(alive[i], alive[i+1]) for i in range(0, len(alive) - 1, 2)]
+        unpaired = [p for p in self._alive_players() if p.available_moves != []]
+        pairs = []
+        for p in unpaired:
+           attempt = p.select_opponent
+           if attempt[0]:
+              pairs.append[p, attempt[2]]
+              unpaired = attempt[1]
+        return pairs
+    
+    '''
+    Completes a matchup between two players
+    Args:
+        op  (Player) opponent
+    '''
+    def matchup(p1: Player, p2: Player):
+       m1 = random.choice(p1.available_moves())
+       m2 = random.choice(p2.available_moves())
+       match resolve(m1, m2):
+            case -1:
+                p2.steal_life(p1)
+            case 1:
+                p1.steal_life(p2)
 
     '''
     Simulates a single round of RPS
     '''
     def _run_round(self):
-        for p1, p2 in self._pair_players():
-            m1 = random.choice(p1.available_moves())
-            m2 = random.choice(p2.available_moves())
-            outcome = resolve(m1, m2)
-            p1.use_move(m1)
-            p2.use_move(m2)
-            if outcome == 1:
-                p2.lose_life()
-            elif outcome == -1:
-                p1.lose_life()
+        for pair in self._pair_players():
+            self.matchup(pair[0], pair[1])
     
     '''
     Simulates a tournament until one player remains. Returns the winner
