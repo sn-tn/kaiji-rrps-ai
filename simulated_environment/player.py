@@ -1,6 +1,6 @@
-from simulation import Move
 import random
 import numpy
+from move import Move
 
 '''
     Representation of a player in a tournament
@@ -73,11 +73,17 @@ class Player:
     Return
         tuple[bool, list[Player], Player]
     '''
-    def select_opponent(self, ops: list[Player]) -> tuple[bool, list[Player], Player]:
-        op = random.choice(ops)
-        if op is self: return [False, ops]
+    def select_opponent(self, ops: list[Player]) -> tuple[bool, list[Player], Player | None]:
+        candidates = [p for p in ops if p is not self]
+        if not candidates:
+            return False, ops, None
+
+        op = random.choice(candidates)
         if op.accept_opponent(self):
-            return [p for p in ops if p not in {op, self}]
+            remaining = [p for p in ops if p is not op and p is not self]
+            return True, remaining, op
+        return False, ops, None
+
         
     '''
     Decides wether to accept a challenge with probability 0.8 yes
@@ -85,5 +91,5 @@ class Player:
     Return
         bool
     '''
-    def accept_opponent(self) -> bool:
-        return self.rng.choices([True, False], p=[0.8, 0.2], size=1)
+    def accept_opponent(self, opponent: Player) -> bool:
+        return bool(self.rng.choice([True, False], p=[0.8, 0.2], size=1))
