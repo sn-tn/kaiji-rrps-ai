@@ -83,6 +83,7 @@ class Player:
             remaining = [p for p in ops if p is not op and p is not self]
             return True, remaining, op
         return False, ops, None
+
         
     '''
     Decides wether to accept a challenge with probability 0.8 yes
