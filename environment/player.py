@@ -1,7 +1,7 @@
 from __future__ import annotations
 import random
 import numpy
-from move import Move
+from environment.move import Move
 
 '''
     Representation of a player in a tournament
@@ -18,10 +18,11 @@ class Player:
         lives       (int) the number of lives the player starts with
         budget      (int) the number of each move the players start with
     '''
-    def __init__(self, player_id: int, lives: int = 3, budget: int = 4):
-        self.id     = player_id
-        self.lives  = lives
-        self.budget = {Move.ROCK: budget, Move.PAPER: budget, Move.SCISSORS: budget}
+    def __init__(self, player_id: int, lives: int = 3, budget: int = 4, position: tuple[int, int] = (0, 0)):
+        self.id       = player_id
+        self.lives    = lives
+        self.budget   = {Move.ROCK: budget, Move.PAPER: budget, Move.SCISSORS: budget}
+        self.position = position
 
     '''
     A list containing the moves available
