@@ -51,10 +51,10 @@ class RestrictedRPSEnv(gym.Env):
     distance). Opponents will move randomly when no target is in range.
 
     Observation (Box, float32, 13 values):
-        [agent_lives,
+        [agent_stars,
          agent_rock_budget, agent_paper_budget, agent_scissors_budget,
          agent_x, agent_y,
-         opponent_lives,
+         opponent_stars,
          opponent_rock_budget, opponent_paper_budget, opponent_scissors_budget,
          opponent_x, opponent_y,
          num_alive_opponents]
@@ -69,7 +69,7 @@ class RestrictedRPSEnv(gym.Env):
         6 = SCISSORS
 
     Reward (defaults, override via RewardConfig):
-        +1   win a matchup (steal opponent's life)
+        +1   win a matchup (steal opponent's star)
         -1   lose a matchup
          0   tie, move action, or no opponent in range
         +5   win the tournament
@@ -77,7 +77,7 @@ class RestrictedRPSEnv(gym.Env):
 
     Args:
         n_opponents:      number of opponents in the tournament (default 3)
-        lives:            starting lives per player (default 3)
+        stars:            starting stars per player (default 3)
         budget:           starting count of each move per player (default 4)
         grid_size:        side length of the square grid (default 20)
         challenge_radius: Chebyshev distance within which players can fight (default 1)
@@ -90,7 +90,7 @@ class RestrictedRPSEnv(gym.Env):
     metadata = {"render_modes": ["human"]}
 
     # observation bounds
-    _MAX_LIVES = 20
+    _MAX_STARS = 20
     _MAX_BUDGET = 10
     _MAX_OPS = 20
 
@@ -106,7 +106,7 @@ class RestrictedRPSEnv(gym.Env):
     def __init__(
         self,
         n_opponents: int = 3,
-        lives: int = 3,
+        stars: int = 3,
         budget: int = 4,
         grid_size: int = 20,
         challenge_radius: int = 1,
@@ -115,7 +115,7 @@ class RestrictedRPSEnv(gym.Env):
     ):
         super().__init__()
         self.n_opponents = n_opponents
-        self.initial_lives = lives
+        self.initial_stars = stars
         self.initial_budget = budget
         self.grid_size = grid_size
         self.challenge_radius = challenge_radius
@@ -128,10 +128,10 @@ class RestrictedRPSEnv(gym.Env):
         # observation space: 13 values
         g = float(grid_size - 1)
         high = np.array(
-            [self._MAX_LIVES]
+            [self._MAX_STARS]
             + [self._MAX_BUDGET] * 3
             + [g, g]
-            + [self._MAX_LIVES]
+            + [self._MAX_STARS]
             + [self._MAX_BUDGET] * 3
             + [g, g]
             + [self._MAX_OPS],
@@ -155,14 +155,14 @@ class RestrictedRPSEnv(gym.Env):
     def _make_players(self):
         self._agent = Player(
             player_id=0,
-            lives=self.initial_lives,
+            stars=self.initial_stars,
             budget=self.initial_budget,
             position=self._random_position(),
         )
         self._opponents = [
             Player(
                 player_id=i + 1,
-                lives=self.initial_lives,
+                stars=self.initial_stars,
                 budget=self.initial_budget,
                 position=self._random_position(),
             )
@@ -195,7 +195,7 @@ class RestrictedRPSEnv(gym.Env):
         op = random.choice(in_range) if in_range else random.choice(alive)
         return np.array(
             [
-                op.lives,
+                op.stars,
                 op.budget[Move.ROCK],
                 op.budget[Move.PAPER],
                 op.budget[Move.SCISSORS],
@@ -209,7 +209,7 @@ class RestrictedRPSEnv(gym.Env):
         ag = self._agent
         return np.array(
             [
-                ag.lives,
+                ag.stars,
                 ag.budget[Move.ROCK],
                 ag.budget[Move.PAPER],
                 ag.budget[Move.SCISSORS],
@@ -332,7 +332,7 @@ class RestrictedRPSEnv(gym.Env):
     def render(self):
         ag = self._agent
         print(
-            f"[Agent] pos={ag.position} lives={ag.lives}"
+            f"[Agent] pos={ag.position} stars={ag.stars}"
             f" budget=R{ag.budget[Move.ROCK]}/P{ag.budget[Move.PAPER]}/S{ag.budget[Move.SCISSORS]}"
             f" | Alive opponents: {len(self._alive_opponents())}"
         )

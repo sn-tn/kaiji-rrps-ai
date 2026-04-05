@@ -2,7 +2,7 @@ import gymnasium as gym
 from environment.rps_gym import RestrictedRPSEnv
 import environment.vis_rps as vis
 
-env = RestrictedRPSEnv(n_opponents=50, lives=3, budget=4)
+env = RestrictedRPSEnv(n_opponents=50, stars=3, budget=4)
 vis.game = env
 vis.setup()
 

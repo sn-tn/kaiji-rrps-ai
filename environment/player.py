@@ -6,7 +6,7 @@ from environment.move import Move
 '''
     Representation of a player in a tournament
     
-    Each player has a fixed move budget and number of lives
+    Each player has a fixed move budget and number of stars
 '''
 class Player:
     rng = numpy.random.default_rng()
@@ -15,12 +15,12 @@ class Player:
     Instantiation
     Args:
         player_id   (int) the id of each player
-        lives       (int) the number of lives the player starts with
+        stars       (int) the number of stars the player starts with
         budget      (int) the number of each move the players start with
     '''
-    def __init__(self, player_id: int, lives: int = 3, budget: int = 4, position: tuple[int, int] = (0, 0)):
+    def __init__(self, player_id: int, stars: int = 3, budget: int = 4, position: tuple[int, int] = (0, 0)):
         self.id       = player_id
-        self.lives    = lives
+        self.stars    = stars
         self.budget   = {Move.ROCK: budget, Move.PAPER: budget, Move.SCISSORS: budget}
         self.position = position
 
@@ -40,7 +40,7 @@ class Player:
         bool
     '''
     def is_alive(self) -> bool:
-        return self.lives > 0 and len(self.available_moves()) > 0
+        return self.stars > 0 and len(self.available_moves()) > 0
 
     '''
     Manages the move budget after an action
@@ -51,19 +51,19 @@ class Player:
         self.budget[move] -= 1
 
     '''
-    Steals the other player's life
+    Steals the other player's star
     Args:
-        other   (Player) opponent life is being stolen from
+        other   (Player) opponent star is being stolen from
     '''
     def steal_life(self, other: Player):
-       self.lives += 1
+       self.stars += 1
        other.lose_life()
 
     '''
-    Deducts a life
+    Deducts a star
     '''
     def lose_life(self):
-        self.lives -= 1
+        self.stars -= 1
 
     '''
     Selects a random opponent from the provided list to 'battle'

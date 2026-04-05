@@ -141,7 +141,7 @@ def draw_console(reward: float, info: dict):
             if p.is_alive() and game._in_range(ag, p)
         )
         info_lines = [
-            f"• Lives:    {ag.lives}",
+            f"• Stars:    {ag.stars}",
             f"• Position: {ag.position}",
             (
                 f"• Budget    R:{ag.budget[Move.ROCK]} "
