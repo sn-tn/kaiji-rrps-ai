@@ -15,6 +15,7 @@ class RewardConfig:
     eliminated: float = -3.0
     victory: float = 5.0
 
+
 # ── helpers ──────────────────────────────────────────────────────────────────
 
 
@@ -95,10 +96,10 @@ class RestrictedRPSEnv(gym.Env):
 
     # action constants
     _MOVE_ACTIONS = {
-        0: (0, -1),   # up
-        1: (0,  1),   # down
-        2: (-1, 0),   # left
-        3: (1,  0),   # right
+        0: (0, -1),  # up
+        1: (0, 1),  # down
+        2: (-1, 0),  # left
+        3: (1, 0),  # right
     }
     _RPS_ACTIONS = {4: Move.ROCK, 5: Move.PAPER, 6: Move.SCISSORS}
 
@@ -127,8 +128,12 @@ class RestrictedRPSEnv(gym.Env):
         # observation space: 13 values
         g = float(grid_size - 1)
         high = np.array(
-            [self._MAX_LIVES] + [self._MAX_BUDGET] * 3 + [g, g]
-            + [self._MAX_LIVES] + [self._MAX_BUDGET] * 3 + [g, g]
+            [self._MAX_LIVES]
+            + [self._MAX_BUDGET] * 3
+            + [g, g]
+            + [self._MAX_LIVES]
+            + [self._MAX_BUDGET] * 3
+            + [g, g]
             + [self._MAX_OPS],
             dtype=np.float32,
         )
@@ -170,7 +175,9 @@ class RestrictedRPSEnv(gym.Env):
     def _in_range(self, a: Player, b: Player) -> bool:
         return chebyshev(a.position, b.position) <= self.challenge_radius
 
-    def _clamp_move(self, pos: tuple[int, int], delta: tuple[int, int]) -> tuple[int, int]:
+    def _clamp_move(
+        self, pos: tuple[int, int], delta: tuple[int, int]
+    ) -> tuple[int, int]:
         x = max(0, min(self.grid_size - 1, pos[0] + delta[0]))
         y = max(0, min(self.grid_size - 1, pos[1] + delta[1]))
         return (x, y)
@@ -224,7 +231,9 @@ class RestrictedRPSEnv(gym.Env):
             if p.id in paired or not p.is_alive():
                 continue
 
-            in_range = [q for q in alive if q is not p and self._in_range(p, q)]
+            in_range = [
+                q for q in alive if q is not p and self._in_range(p, q)
+            ]
             if not in_range:
                 # no one nearby — move randomly
                 delta = random.choice(list(self._MOVE_ACTIONS.values()))
@@ -275,7 +284,11 @@ class RestrictedRPSEnv(gym.Env):
             else:
                 # ── RPS matchup ──────────────────────────────────────────────
                 move = self._RPS_ACTIONS[action]
-                in_range = [op for op in self._alive_opponents() if self._in_range(self._agent, op)]
+                in_range = [
+                    op
+                    for op in self._alive_opponents()
+                    if self._in_range(self._agent, op)
+                ]
 
                 if in_range and move in self._agent.available_moves():
                     op = random.choice(in_range)
@@ -326,3 +339,4 @@ class RestrictedRPSEnv(gym.Env):
 
     def close(self):
         pass
+
