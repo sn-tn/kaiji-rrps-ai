@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing import TypedDict
 import gymnasium as gym
 from gymnasium import spaces
-from environment.player import Player
-from environment.move import Move
+from environment.player import Player, RandomPlayer, AgentPlayer, AggressivePlayer, ConservativePlayer
+from environment.move import Move, chebyshev
 
 
 class BudgetObs(TypedDict):
@@ -56,11 +56,6 @@ def resolve(m1: Move, m2: Move) -> int:
     if m1 == m2:
         return 0
     return 1 if wins_against[m1] == m2 else -1
-
-
-def chebyshev(a: tuple[int, int], b: tuple[int, int]) -> int:
-    """Chebyshev (chessboard) distance between two grid positions."""
-    return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
 
 
 # ── environment ───────────────────────────────────────────────────────────────────
@@ -193,14 +188,17 @@ class RestrictedRPSEnv(gym.Env):
         )
 
     def _make_players(self):
-        self._agent = Player(
+        self._agent = AgentPlayer(
             player_id=0,
             stars=self.initial_stars,
             budget=self.initial_budget,
             position=self._random_position(),
         )
+
+        player_types = [RandomPlayer, AggressivePlayer, ConservativePlayer]
+
         self._opponents = [
-            Player(
+            random.choice(player_types)(
                 player_id=i + 1,
                 stars=self.initial_stars,
                 budget=self.initial_budget,
@@ -261,48 +259,53 @@ class RestrictedRPSEnv(gym.Env):
         }
 
     def _run_opponent_matchups(self):
-        """Pair up alive opponents and resolve fights; unpaired opponents move randomly."""
+        """Pair up alive opponents and resolve fights; unpaired opponents move according to playertype."""
         alive = self._alive_opponents()
         random.shuffle(alive)
         paired: set[int] = set()
+        needs_move: list[Player] = []
 
         for p in alive:
+            # Prevent multiple challenges for one opponent or opponents that cant play
             if p.id in paired or not p.is_alive():
                 continue
 
-            # if the player is within the challenge_radius of an opponent
-            in_range = [
-                q for q in alive if q is not p and self._in_range(p, q)
-            ]
+            in_range = [q for q in alive if q is not p and q.is_alive() and self._in_range(p, q)]
+
             if not in_range:
-                # no one nearby -- move randomly
-                delta = random.choice(list(self._MOVE_ACTIONS.values()))
-                p.position = self._clamp_move(p.position, delta)
+                needs_move.append(p)
                 continue
 
-            accepted, _, op = p.select_opponent(in_range)
-            # if the challenge is accepted, and the op is not already paired with another agent
+            # challenge stage - all opponents try to challenge someone nearby
+            accepted, _, op = p.select_opponent(in_range, alive)
+
+            # if accepted battle, otherwise added to move set
             if accepted and op is not None and op.id not in paired:
-                p_moves = p.available_moves()
-                op_moves = op.available_moves()
-                if not p_moves or not op_moves:
-                    delta = random.choice(list(self._MOVE_ACTIONS.values()))
-                    p.position = self._clamp_move(p.position, delta)
-                    continue
-                m1 = random.choice(p_moves)
-                m2 = random.choice(op_moves)
+                m1 = p.select_move(op)
+                m2 = op.select_move(p)
                 p.use_move(m1)
                 op.use_move(m2)
                 result = resolve(m1, m2)
+
                 if result == 1:
                     p.steal_life(op)
                 elif result == -1:
                     op.steal_life(p)
                 paired.update({p.id, op.id})
             else:
-                # challenge refused -- move randomly
-                delta = random.choice(list(self._MOVE_ACTIONS.values()))
-                p.position = self._clamp_move(p.position, delta)
+                needs_move.append(p)
+
+        # establish alive opponents so players do not chase outdated information
+        alive = self._alive_opponents()
+
+
+        # movement stage - any opponents who do not have an opponent move
+        for p in needs_move:
+            if not p.is_alive() or p.id in paired:
+                continue
+
+            delta = p.select_direction(alive)
+            p.position = self._clamp_move(p.position, delta.value)
 
     # ── gym API ───────────────────────────────────────────────────────────────────────────────────
 
@@ -358,9 +361,8 @@ class RestrictedRPSEnv(gym.Env):
 
                 if in_range and move in self._agent.available_moves():
                     op = random.choice(in_range)
-                    op_moves = op.available_moves()
-                    if op.accept_opponent(self._agent) and op_moves:
-                        op_move = random.choice(op_moves)
+                    if op.accept_opponent(self._agent):
+                        op_move = op.select_move(self._agent)
                         self._agent.use_move(move)
                         op.use_move(op_move)
 
