@@ -1,5 +1,5 @@
 from environment_core.player import Player
-from environment_core.move import Move
+from environment_core.move import Card
 
 
 class MatchupTable:
@@ -10,15 +10,15 @@ class MatchupTable:
     """
 
     def __init__(self):
-        self.challenges: dict[Player, tuple[Move, Player]] = {}
+        self.challenges: dict[Player, tuple[Card, Player]] = {}
 
     def challenge(
-        self, challenger: Player, card: Move, challenged: Player
+        self, challenger: Player, card: Card, challenged: Player
     ) -> None:
         """Record that challenger declared a challenge to challenged with card."""
         self.challenges[challenger] = (card, challenged)
 
-    def get_incoming(self, player: Player) -> list[tuple[Player, Move]]:
+    def get_incoming(self, player: Player) -> list[tuple[Player, Card]]:
         """Return (challenger, card) for all incoming challenges to this player."""
         return [
             (c, card)
@@ -26,7 +26,7 @@ class MatchupTable:
             if t is player
         ]
 
-    def get_outgoing(self, player: Player) -> tuple[Move, Player] | None:
+    def get_outgoing(self, player: Player) -> tuple[Card, Player] | None:
         """Return (card, target) for this player's outgoing challenge, or None."""
         return self.challenges.get(player)
 

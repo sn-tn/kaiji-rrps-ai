@@ -1,6 +1,6 @@
 from enum import Enum
 
-class Move(Enum):
+class Card(Enum):
     ROCK=0
     PAPER=1
     SCISSORS=2

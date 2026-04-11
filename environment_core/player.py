@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 import numpy
 
-from environment_core.move import Move, Direction, chebyshev
+from environment_core.move import Card, Direction, chebyshev
 
 
 class PlayerType(Enum):
@@ -47,9 +47,9 @@ class Player(ABC):
         self.id = player_id
         self.stars = stars
         self.budget = {
-            Move.ROCK: budget,
-            Move.PAPER: budget,
-            Move.SCISSORS: budget,
+            Card.ROCK: budget,
+            Card.PAPER: budget,
+            Card.SCISSORS: budget,
         }
         self.position = position
 
@@ -60,7 +60,7 @@ class Player(ABC):
         self.position = (x, y)
         return (x, y)
 
-    def available_cards(self) -> list[Move]:
+    def available_cards(self) -> list[Card]:
         """Return the list of moves the player can still use.
 
         Returns:
@@ -78,7 +78,7 @@ class Player(ABC):
         """
         return self.stars > 0
 
-    def use_card(self, move: Move) -> None:
+    def use_card(self, move: Card) -> None:
         """Consume one unit of budget for the given move.
 
         Args:
@@ -124,7 +124,7 @@ class Player(ABC):
         return len(self.available_cards()) > 0
 
     @abstractmethod
-    def select_card(self, opponent: "Player" | None = None) -> Move:
+    def select_card(self, opponent: "Player" | None = None) -> Card:
         """Choose a move to play.
 
         Args:
@@ -196,7 +196,7 @@ class AgentPlayer(Player):
     The agent always accepts challenges.
     """
 
-    def select_card(self, opponent: Player | None = None) -> Move:
+    def select_card(self, opponent: Player | None = None) -> Card:
         """Raise an error because move selection is environment-controlled.
 
         Args:
@@ -271,7 +271,7 @@ class BasicPlayer(Player):
         - Challenge acceptance: Always accepts
     """
 
-    def select_card(self, opponent: Player | None = None) -> Move:
+    def select_card(self, opponent: Player | None = None) -> Card:
         """Randomly select one available move.
 
         Args:

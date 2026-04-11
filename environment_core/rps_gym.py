@@ -3,7 +3,7 @@ from typing import TypedDict
 import gymnasium as gym
 from gymnasium import spaces
 from environment_core.player import Player, BasicPlayer, AgentPlayer
-from environment_core.move import Move, chebyshev
+from environment_core.move import Card, chebyshev
 from environment_core.matchup_table import MatchupTable
 
 
@@ -36,15 +36,15 @@ class RewardConfig:
 # ── helpers ────────────────────────────────────────────────────────────────────────────
 
 
-def resolve(m1: Move, m2: Move) -> int:
+def resolve(m1: Card, m2: Card) -> int:
     """Returns 1 if m1 wins, -1 if m2 wins, 0 on tie."""
-    if not (isinstance(m1, Move) and isinstance(m2, Move)):
+    if not (isinstance(m1, Card) and isinstance(m2, Card)):
         raise TypeError("Arguments must be valid Move values")
 
     wins_against = {
-        Move.ROCK: Move.SCISSORS,
-        Move.PAPER: Move.ROCK,
-        Move.SCISSORS: Move.PAPER,
+        Card.ROCK: Card.SCISSORS,
+        Card.PAPER: Card.ROCK,
+        Card.SCISSORS: Card.PAPER,
     }
     if m1 == m2:
         return 0
@@ -110,7 +110,7 @@ class RestrictedRPSEnv(gym.Env):
         2: (-1, 0),  # left
         3: (1, 0),   # right
     }
-    _RPS_ACTIONS = {4: Move.ROCK, 5: Move.PAPER, 6: Move.SCISSORS}
+    _RPS_ACTIONS = {4: Card.ROCK, 5: Card.PAPER, 6: Card.SCISSORS}
 
     def __init__(
         self,
@@ -188,7 +188,7 @@ class RestrictedRPSEnv(gym.Env):
         for op in self._opponents:
             op.position = self._random_position()
             op.stars = self.initial_stars
-            op.budget = {Move.ROCK: self.initial_budget, Move.PAPER: self.initial_budget, Move.SCISSORS: self.initial_budget}
+            op.budget = {Card.ROCK: self.initial_budget, Card.PAPER: self.initial_budget, Card.SCISSORS: self.initial_budget}
         self.matchup_table = MatchupTable([*self._opponents, self._agent])
 
     def _alive_opponents(self) -> list[Player]:
@@ -209,9 +209,9 @@ class RestrictedRPSEnv(gym.Env):
             "player_id": p.id,
             "stars": p.stars,
             "budget": {
-                "rock": p.budget[Move.ROCK],
-                "paper": p.budget[Move.PAPER],
-                "scissors": p.budget[Move.SCISSORS],
+                "rock": p.budget[Card.ROCK],
+                "paper": p.budget[Card.PAPER],
+                "scissors": p.budget[Card.SCISSORS],
             },
             "position": p.position,
         }
@@ -437,7 +437,7 @@ class RestrictedRPSEnv(gym.Env):
         ag = self._agent
         print(
             f"[Agent] pos={ag.position} stars={ag.stars}"
-            f" budget=R{ag.budget[Move.ROCK]}/P{ag.budget[Move.PAPER]}/S{ag.budget[Move.SCISSORS]}"
+            f" budget=R{ag.budget[Card.ROCK]}/P{ag.budget[Card.PAPER]}/S{ag.budget[Card.SCISSORS]}"
             f" | Alive opponents: {len(self._alive_opponents())}"
         )
 

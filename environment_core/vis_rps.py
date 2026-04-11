@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pygame
 import time
 from environment_core.rps_gym import RestrictedRPSEnv
-from environment_core.move import Move
+from environment_core.move import Card
 from environment_core.player import BasicPlayer
 
 CELL_SIZE = 40
@@ -154,8 +154,8 @@ def draw_console(reward: float, info: dict):
             f"• Stars:    {ag.stars}",
             f"• Position: {ag.position}",
             (
-                f"• Budget    R:{ag.budget[Move.ROCK]} "
-                f" P:{ag.budget[Move.PAPER]}  S:{ag.budget[Move.SCISSORS]}"
+                f"• Budget    R:{ag.budget[Card.ROCK]} "
+                f" P:{ag.budget[Card.PAPER]}  S:{ag.budget[Card.SCISSORS]}"
             ),
             f"• Opponents alive: {alive_ops}",
             f"• In range:        {in_range}",
