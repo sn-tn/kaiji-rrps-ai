@@ -12,6 +12,7 @@ from gym_core.matchup_table import MatchupDict
 from gym_core.challenge_table import ChallengeTable
 from gym_core.observation import Observation
 from gym_core.cards import Card
+from gym_core.info import Info
 
 from gym_core.player import Budget
 
@@ -110,7 +111,7 @@ class RestrictedRPSEnv(gym.Env):
         )
         self.matchup_dict: MatchupDict = {}
 
-    def reset(self):
+    def _initialize_players(self):
         # agent always zero initilize w/ params
         self.player_dict[0] = {
             **self.initial_agent_budget,
@@ -132,19 +133,14 @@ class RestrictedRPSEnv(gym.Env):
         }
         return obs
 
+    def _get_info(self) -> Info:
+
+        return
+
     def reset(self, *, seed: int | None = None, options: dict | None = None):
         super().reset(seed=seed)
-        # agent always zero initilize w/ params
-        self.player_dict[0] = {
-            **self.initial_agent_budget,
-            "stars_total": self.initial_stars,
-        }
-        # rest of player initilized, start at 1
-        player_init = {
-            **self.initial_player_budget,
-            "stars_total": self.initial_stars,
-        }
-        self.player_dict = {i: player_init for i in range(1, self.n_players)}
+
+        self._initialize_players()
         self.turn = 0
         obs = self._get_obs()
         info = {}
@@ -161,7 +157,6 @@ class RestrictedRPSEnv(gym.Env):
         obs = self._get_obs()
 
         return obs, reward, terminated, truncated, info
-
 
     def close(self):
         pass
