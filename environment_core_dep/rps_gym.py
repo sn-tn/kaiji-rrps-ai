@@ -2,9 +2,6 @@ from dataclasses import dataclass
 from typing import TypedDict
 import gymnasium as gym
 from gymnasium import spaces
-from environment_core.player import Player, BasicPlayer, AgentPlayer
-from environment_core.move import Card, chebyshev
-from environment_core.matchup_table import MatchupTable
 
 
 class BudgetObs(TypedDict):
