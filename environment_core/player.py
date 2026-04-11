@@ -3,7 +3,6 @@ from __future__ import annotations
 import random
 from abc import ABC, abstractmethod
 from enum import Enum
-
 import numpy
 
 from environment_core.move import Move, Direction, chebyshev
@@ -111,28 +110,15 @@ class Player(ABC):
         """
         dx = numpy.sign(target.position[0] - self.position[0])
         dy = numpy.sign(target.position[1] - self.position[1])
-        return min(
-            Direction,
-            key=lambda direction: abs(direction.value[0] - dx)
-            + abs(direction.value[1] - dy),
+
+        best_score = min(
+            abs(d.value[0] - dx) + abs(d.value[1] - dy) for d in Direction
         )
-
-    def _away(self, target: "Player") -> Direction:
-        """Return the direction that moves this player away from a target.
-
-        Args:
-            target: The player to move away from.
-
-        Returns:
-            The direction that best increases separation from the target.
-        """
-        dx = numpy.sign(self.position[0] - target.position[0])
-        dy = numpy.sign(self.position[1] - target.position[1])
-        return min(
-            Direction,
-            key=lambda direction: abs(direction.value[0] - dx)
-            + abs(direction.value[1] - dy),
-        )
+        best = [
+            d for d in Direction
+            if abs(d.value[0] - dx) + abs(d.value[1] - dy) == best_score
+        ]
+        return random.choice(best)
 
     def has_cards(self):
         return len(self.available_cards()) > 0
@@ -300,7 +286,6 @@ class BasicPlayer(Player):
     def challenge_opponent(
         self,
         available_opponents: list[Player],
-        alive_players: list[Player],
     ) -> tuple[bool, list[Player], Player | None]:
         """Challenge the nearest opponent in range.
 
@@ -315,21 +300,14 @@ class BasicPlayer(Player):
                 - the selected opponent, or None if no challenge occurred
         """
         if not available_opponents or not self.has_cards():
-            return False, alive_players, None
+            return None
 
         opponent = min(
             available_opponents,
             key=lambda p: chebyshev(self.position, p.position),
         )
-        if opponent.accept_challenge(self):
-            remaining_players = [
-                player
-                for player in alive_players
-                if player is not opponent and player is not self
-            ]
-            return True, remaining_players, opponent
 
-        return False, alive_players, None
+        return opponent
 
     def accept_challenge(self, opponent: Player) -> bool:
         """Always accept a challenge.
@@ -365,4 +343,5 @@ class BasicPlayer(Player):
         nearest = min(
             others, key=lambda p: chebyshev(self.position, p.position)
         )
+
         return self._toward(nearest)
