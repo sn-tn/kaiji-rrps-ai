@@ -61,9 +61,9 @@ class RestrictedRPSEnv(gym.Env):
             "scissors_total": 3,
         },
         player_budget: Budget = {
-            "paper_total": 1,
-            "rock_total": 1,
-            "scissors_total": 1,
+            "paper_total": 0,
+            "rock_total": 0,
+            "scissors_total": 9,
         },
         max_turns: int = 500,
         reward_config: RewardConfig | None = None,
@@ -78,7 +78,7 @@ class RestrictedRPSEnv(gym.Env):
 
         # observation space
         self.observation_space = spaces.Dict(
-            {i: spaces.Discrete(self.num_players) for i in range(n_opponents)}
+            {i: spaces.Discrete(self.n_players) for i in range(n_opponents)}
         )
 
         # action space opponents * rps
@@ -148,16 +148,20 @@ class RestrictedRPSEnv(gym.Env):
         return action // 3, self._action_to_challenge[action % 3]
 
     def step(self, action: int):
-        assert self.action_space.contains(action), f"Invalid action: {action}"
+        # assert self.action_space.contains(action), f"Invalid action: {action}"
 
         reward = 0.0
         terminated = False
         truncated = False
         info = {}
 
+        # 
+        # learning
+        #
+
         obs = self._get_obs()
         info = self._get_info()
-
+        self.turn += 1
         return obs, reward, terminated, truncated, info
 
     def close(self):

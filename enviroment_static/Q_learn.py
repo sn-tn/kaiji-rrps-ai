@@ -1,12 +1,20 @@
 from enviroment_static.rrps_gym import RestrictedRPSEnv
-import tqdm
+from tqdm import tqdm
 import numpy as np
 import sys
 import pickle
+from gym_core.observation import Observation
 
-env = RestrictedRPSEnv(n_opponents=4, stars=3, grid_size=12)
+env = RestrictedRPSEnv(n_opponents=4, stars=3)
 train_flag = "train" in sys.argv
 gui_flag = "gui" in sys.argv
+
+
+def hash(obs: Observation) -> tuple:
+    return tuple(
+        (pid, player["stars_total"])
+        for pid, player in sorted(obs["player_dict"].items())
+    )
 
 
 def Q_learning(num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
@@ -47,7 +55,7 @@ def Q_learning(num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
             # if gui_flag:
             #     vis.refresh(obs, reward, terminated, info, delay=0.1)
             new_state_key = hash(new_obs)
-
+            print(new_state_key)
             ## initalize state action if not already
             if new_state_key not in Q_update_counts:
                 Q_update_counts[new_state_key] = np.zeros(env.action_space.n)
