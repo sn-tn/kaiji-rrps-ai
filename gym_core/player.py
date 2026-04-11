@@ -11,4 +11,4 @@ class Player(TypedDict):
 
 PlayerID: TypeAlias = int
 
-PlayerTable: TypeAlias = dict[PlayerID, Player]
+PlayerDict: TypeAlias = dict[PlayerID, Player]

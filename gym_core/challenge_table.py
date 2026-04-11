@@ -16,7 +16,7 @@ ChallengeTable: TypeAlias = dict[
 
 
 class ChallengeSchema(pa.DataFrameModel):
-    player_id: Series[int]
+    player_id: Series[int] # its a series because its rows not a list
     card: Series[str]
     target_id: Series[int]
 
