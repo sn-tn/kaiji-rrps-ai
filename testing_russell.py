@@ -1,22 +1,13 @@
 import gymnasium as gym
 from environment_core.rps_gym import RestrictedRPSEnv, Observation
 import environment_core.vis_rps as vis
-from environment_core.player import BasicPlayer
 
 from tqdm import tqdm
 import pickle
 import numpy as np
 import sys
 
-opponents = [
-    BasicPlayer(
-        player_id=i + 1,
-        stars=3,
-        budget=4,
-    )
-    for i in range(30)
-]
-env = RestrictedRPSEnv(opponents=opponents, stars=3, budget=4, grid_size=12)
+env = RestrictedRPSEnv(n_opponents=30, stars=3, budget=4, grid_size=12)
 
 BOLD = "\033[1m"  # ANSI escape sequence for bold text
 RESET = "\033[0m"  # ANSI escape sequence to reset text formatting

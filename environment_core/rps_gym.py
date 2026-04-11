@@ -114,8 +114,8 @@ class RestrictedRPSEnv(gym.Env):
 
     def __init__(
         self,
-        opponents: list[Player],
-        stars: int = 3,
+        n_opponents: int = 3,
+        stars: int = 1,
         budget: int = 4,
         grid_size: int = 20,
         challenge_radius: int = 1,
@@ -124,8 +124,7 @@ class RestrictedRPSEnv(gym.Env):
         reward_config: RewardConfig | None = None,
     ):
         super().__init__()
-        self._opponents = opponents
-        self.n_opponents = len(opponents)
+        self.n_opponents = n_opponents
         self.initial_stars = stars
         self.initial_budget = budget
         self.grid_size = grid_size
@@ -141,7 +140,7 @@ class RestrictedRPSEnv(gym.Env):
         max_budget = budget
 
         # action space: 4 move directions + 3 RPS moves
-        self.action_space = spaces.Discrete(7)
+        self.action_space = spaces.Discrete(self.n_opponents * 3 + 4)
         # observation space: nested dict
         g = grid_size - 1
         player_space = spaces.Dict(
@@ -169,6 +168,7 @@ class RestrictedRPSEnv(gym.Env):
         )
 
         self._agent: Player | None = None
+        self._opponents: list[Player] = []
 
     # ── private helpers ───────────────────────────────────────────────────────────────────
 
@@ -185,10 +185,15 @@ class RestrictedRPSEnv(gym.Env):
             budget=self.initial_budget,
             position=self._random_position(),
         )
-        for op in self._opponents:
-            op.position = self._random_position()
-            op.stars = self.initial_stars
-            op.budget = {Move.ROCK: self.initial_budget, Move.PAPER: self.initial_budget, Move.SCISSORS: self.initial_budget}
+        self._opponents = [
+            BasicPlayer(
+                player_id=i + 1,
+                stars=self.initial_stars,
+                budget=self.initial_budget,
+                position=self._random_position(),
+            )
+            for i in range(self.n_opponents)
+        ]
         self.matchup_table = MatchupTable([*self._opponents, self._agent])
 
     def _alive_opponents(self) -> list[Player]:

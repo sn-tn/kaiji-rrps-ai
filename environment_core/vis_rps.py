@@ -6,7 +6,6 @@ import pygame
 import time
 from environment_core.rps_gym import RestrictedRPSEnv
 from environment_core.move import Move
-from environment_core.player import BasicPlayer
 
 CELL_SIZE = 40
 CONSOLE_WIDTH = 350
@@ -26,15 +25,7 @@ game_ended = False
 action_results = []
 clock = None
 
-opponents = [
-    BasicPlayer(
-        player_id=i + 1,
-        stars=3,
-        budget=4,
-    )
-    for i in range(30)
-]
-env = RestrictedRPSEnv(opponents=opponents, stars=3, budget=4, grid_size=12)
+game = RestrictedRPSEnv(n_opponents=30, stars=3, budget=4, grid_size=12)
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
