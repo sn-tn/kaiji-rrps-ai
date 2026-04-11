@@ -4,7 +4,7 @@
 
 ## Important
 
-Make sure pickle is git ignored or can break version control if large enough.
+Make sure pickle is git ignored or can break version control if large enough
 
 ## Setup
 
