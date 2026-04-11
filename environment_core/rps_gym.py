@@ -238,8 +238,7 @@ class RestrictedRPSEnv(gym.Env):
         ag = self._agent
         alive = self._alive_opponents()
         if alive:
-            in_range = [op for op in alive if self._in_range(ag, op)]
-            op = random.choice(in_range) if in_range else random.choice(alive)
+            op = min(alive, key=lambda p: chebyshev(ag.position, p.position))
             opponent_obs = self._player_obs(op)
         else:
             opponent_obs = self._null_opponent_obs()

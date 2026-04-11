@@ -27,24 +27,18 @@ def hash(obs: Observation) -> tuple:
     opp = obs["opponent"]
     x_diff = opp["position"][0] - ag["position"][0]
     y_diff = opp["position"][1] - ag["position"][1]
-    rel_dir = (
-        int(np.sign(x_diff)),
-        int(np.sign(y_diff)),
-    )  # (-1/0/1, -1/0/1) above/below/left/right
-    key = (
-        ag["stars"],
-        ag["budget"]["rock"],
-        ag["budget"]["paper"],
-        ag["budget"]["scissors"],
-        opp["stars"],
-        opp["budget"]["rock"],
-        opp["budget"]["paper"],
-        opp["budget"]["scissors"],
-        obs["opponent"]["player_id"],
+    rel_dir = (int(np.sign(x_diff)), int(np.sign(y_diff)))
+    in_range = max(abs(x_diff), abs(y_diff)) <= env.challenge_radius
+    return (
         rel_dir,
+        in_range,
+        ag["budget"]["rock"] > 0,
+        ag["budget"]["paper"] > 0,
+        ag["budget"]["scissors"] > 0,
+        opp["budget"]["rock"] > 0,
+        opp["budget"]["paper"] > 0,
+        opp["budget"]["scissors"] > 0,
     )
-    # print("key", key)
-    return key
 
 
 def Q_learning(num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
