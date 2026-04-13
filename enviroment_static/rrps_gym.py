@@ -62,8 +62,8 @@ class RestrictedRPSEnv(gym.Env):
         },
         player_budget: Budget = {
             "paper_total": 3,
-            "rock_total": 3,
-            "scissors_total": 3,
+            "rock_total": 0,
+            "scissors_total": 0,
         },
         max_turns: int = 500,
         reward_config: RewardConfig | None = None,

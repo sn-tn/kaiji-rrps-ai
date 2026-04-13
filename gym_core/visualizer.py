@@ -98,7 +98,13 @@ def render_table(
     border_color=(40, 48, 68),
     text_color=(220, 225, 235),
     header_text_color=(160, 170, 200),
+    highlight_rows=None,
 ):
+    highlight_rows = (
+        set(df.index[df["player_id"] == 0].tolist())
+        if "player_id" in df
+        else set()
+    )
     cell_rects = {}
 
     rows = [df.columns.tolist()] + df.values.tolist()
@@ -112,17 +118,29 @@ def render_table(
         font = pygame.font.SysFont("monospace", 14)
     for row_i, row in enumerate(rows):
         is_header = header and row_i == 0
+        is_highlight = not is_header and (row_i - 1) in highlight_rows
+
         cx = x
+        fill = bg_color
         for col_i, cell in enumerate(row):
             col_w = col_widths[col_i]
             rect = pygame.Rect(cx, y + row_i * row_height, col_w, row_height)
             cell_rects[(row_i, col_i)] = rect
-            pygame.draw.rect(
-                screen, header_bg_color if is_header else bg_color, rect
-            )
+            if is_header:
+                fill = header_bg_color
+            elif is_highlight:
+                fill = (0, 255, 80)
+            else:
+                fill = bg_color
+            pygame.draw.rect(screen, fill, rect)
             pygame.draw.rect(screen, border_color, rect, 1)
 
-            color = header_text_color if is_header else text_color
+            color = text_color
+            if is_header:
+                color = header_text_color
+            elif is_highlight:
+                color = (0, 0, 0)
+
             surf = font.render(str(cell), True, color)
             screen.blit(
                 surf,
@@ -176,7 +194,7 @@ def toggle_autoplay():
     autoplay = not autoplay
 
 
-def refresh(info: Info):
+def refresh(terminated: bool, truncated: bool, info: Info):
     screen.fill((15, 15, 20))
     y = 10
     font = pygame.font.SysFont("monospace", 14)
@@ -247,6 +265,7 @@ def refresh(info: Info):
         screen.blit(
             font.render("players: skipped", True, (100, 110, 135)), (10, y)
         )
+
     control_menu.draw(screen)
     next_round_menu.draw(screen)
     pygame.display.flip()

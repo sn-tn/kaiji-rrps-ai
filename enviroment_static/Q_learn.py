@@ -91,7 +91,7 @@ def Q_learning(num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
             Q_update_counts[prev_state_key][action] += 1
 
             if gui_flag:
-                vis.refresh(info)
+                vis.refresh(terminated, truncated, info)
             # update epsilon and end or continue w/ new step as prev
             if terminated or truncated:
                 epsilon *= decay_rate
@@ -130,7 +130,7 @@ def softmax(x, temp=1.0):
 
 
 if not train_flag:
-    
+
     rewards = []
     wins = 0
     losses = 0
@@ -171,7 +171,7 @@ if not train_flag:
         else:
             truncations += 1
         if gui_flag:
-            vis.refresh(info)
+            vis.refresh(terminated, truncated, info)
         # print("Total reward:", total_reward)
         rewards.append(total_reward)
     avg_reward = sum(rewards) / len(rewards)
