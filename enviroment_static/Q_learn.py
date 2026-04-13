@@ -4,16 +4,20 @@ import numpy as np
 import sys
 import pickle
 from gym_core.observation import Observation
+import gym_core.visualizer as vis
 
 env = RestrictedRPSEnv(n_opponents=3, stars=3)
 train_flag = "train" in sys.argv
+gui_flag = "gui" in sys.argv
+if gui_flag:
+    vis.init()
 
 
 def hash(obs: Observation) -> tuple:
     agent = obs["player_dict"][0]
     opponents = sorted(
         ((pid, p) for pid, p in obs["player_dict"].items() if pid != 0),
-        key=lambda x: x[0]
+        key=lambda x: x[0],
     )
     opponent_state = tuple(
         (
@@ -39,7 +43,7 @@ def Q_learning(num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
 
     Parameters:
     - num_episodes (int): Number of episodes to run.
-    - gamma (float): Discount factor. 
+    - gamma (float): Discount factor.
     - epsilon (float): Exploration rate.
     - decay_rate (float): Rate at which epsilon decays. Epsilon should be decayed as epsilon = epsilon * decay_rate after each episode.
 
@@ -86,6 +90,8 @@ def Q_learning(num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
             Q_table[prev_state_key][action] = Q_new
             Q_update_counts[prev_state_key][action] += 1
 
+            if gui_flag:
+                vis.refresh(info)
             # update epsilon and end or continue w/ new step as prev
             if terminated or truncated:
                 epsilon *= decay_rate
@@ -124,7 +130,7 @@ def softmax(x, temp=1.0):
 
 
 if not train_flag:
-
+    
     rewards = []
     wins = 0
     losses = 0
@@ -159,12 +165,13 @@ if not train_flag:
             total_reward += reward
 
         if len(env.alive_dict) == 1 and 0 in env.alive_dict:
-            wins+= 1
+            wins += 1
         elif 0 not in env.alive_dict:
             losses += 1
         else:
             truncations += 1
-
+        if gui_flag:
+            vis.refresh(info)
         # print("Total reward:", total_reward)
         rewards.append(total_reward)
     avg_reward = sum(rewards) / len(rewards)

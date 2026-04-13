@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 
 from gym_core.player import PlayerDict
-from gym_core.matchup_table import MatchupDict
+from gym_core.matchup_dict import MatchupDict
 from gym_core.challenge_table import ChallengeTable
 from gym_core.observation import Observation
 from gym_core.cards import Card

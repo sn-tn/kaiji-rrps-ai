@@ -8,13 +8,13 @@ import pandas as pd
 import pandera.pandas as pa
 import numpy as np
 
-from gym_core.matchup_table import MatchupDict
+from gym_core.matchup_dict import MatchupDict
 from gym_core.challenge_table import ChallengeTable, ChallengeSchema
 from gym_core.observation import Observation
 from gym_core.cards import Card
 from gym_core.info import Info
 from gym_core.player import PlayerDict, PlayerID, Budget
-from gym_core.matchup_table import MatchupPair, MatchupDict
+from gym_core.matchup_dict import MatchupPair, MatchupDict
 
 
 @dataclass
@@ -94,15 +94,6 @@ class RestrictedRPSEnv(gym.Env):
         #     3: np.array([1, 0]),  # Move down (row + 1)
         # }
         self.player_dict: PlayerDict = {}
-        self.challenge_table: ChallengeTable = pd.DataFrame(
-            {
-                "player_id": pd.Series(dtype=int),
-                "card": pd.Series(dtype=str),
-                "priority": pd.Series(dtype=int),
-                "target_id": pd.Series(dtype=int),
-            }
-        )
-        self.matchup_dict: MatchupDict = {}
 
     def _initialize_players(self):
         self.player_dict = {
@@ -127,9 +118,19 @@ class RestrictedRPSEnv(gym.Env):
         }
         return obs
 
-    def _get_info(self) -> Info:
-
-        return {}
+    def _get_info(
+        self,
+        initial_alive_player_dict: PlayerDict,
+        challenge_table: ChallengeTable | None = None,
+        matchup_dict: MatchupDict | None = None,
+    ) -> Info:
+        return {
+            "challenge_table": challenge_table,
+            "matchup_dict": matchup_dict,
+            "alive_player_dict": self.alive_dict,
+            "round_number": self.turn,
+            "initial_alive_player_dict": initial_alive_player_dict,
+        }
 
     def reset(self, *, seed: int | None = None, options: dict | None = None):
         super().reset(seed=seed)
@@ -157,7 +158,7 @@ class RestrictedRPSEnv(gym.Env):
         }
 
     # all players passed in through PlayerDict MUST be eligible to play (cards remaining)
-    
+
     def _rank_opponents(
         self, pid: PlayerID, table: PlayerDict
     ) -> list[PlayerID]:
@@ -333,6 +334,9 @@ class RestrictedRPSEnv(gym.Env):
         target = self.player_dict[target_pid]
         agent = self.player_dict[0]
 
+        challenge_table: ChallengeTable | None = None
+        matchup_dict: MatchupDict | None = None
+        initial_alive_player_dict: PlayerDict = self.alive_dict
         if target_pid not in self.alive_dict:
             reward += self.reward_config.invalid_move
         elif agent[card.value] == 0:
@@ -343,18 +347,20 @@ class RestrictedRPSEnv(gym.Env):
                 self.alive_dict, agent_card=card, agent_target=target_pid
             )
 
-            matchups = self.resolve_challenges(
+            matchup_dict = self.resolve_challenges(
                 self.alive_dict, challenge_table
             )
-            print()
             # resolve matchups
             agent_stars_before = self.player_dict[0]["stars_total"]
-            self.resolve_matchups(matchups, self.player_dict)
+            self.resolve_matchups(matchup_dict, self.player_dict)
             agent_stars_after = self.player_dict[0]["stars_total"]
 
             # reward based on matchup result
             if agent_stars_after > agent_stars_before:
-                reward += (self.reward_config.win_matchup * self.player_dict[0]["stars_total"])
+                reward += (
+                    self.reward_config.win_matchup
+                    * self.player_dict[0]["stars_total"]
+                )
             elif agent_stars_after < agent_stars_before:
                 reward += self.reward_config.lose_matchup
             else:
@@ -374,7 +380,9 @@ class RestrictedRPSEnv(gym.Env):
             truncated = True
 
         obs = self._get_obs()
-        info = self._get_info()
+        info = self._get_info(
+            initial_alive_player_dict, challenge_table, matchup_dict
+        )
         self.turn += 1
         return obs, reward, terminated, truncated, info
 
