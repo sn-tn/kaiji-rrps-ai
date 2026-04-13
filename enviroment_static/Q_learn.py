@@ -165,9 +165,9 @@ if not train_flag:
 
             total_reward += reward
 
-        if len(env.alive_dict) == 1 and 0 in env.alive_dict:
+        if env.player_dict[0]["stars_total"] > 3:
             wins += 1
-        elif 0 not in env.alive_dict:
+        elif env.player_dict[0]["stars_total"] <= 3:
             losses += 1
         else:
             truncations += 1

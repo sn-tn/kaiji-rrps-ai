@@ -153,7 +153,7 @@ class RestrictedRPSEnv(gym.Env):
         self.alive_dict = {
             pid: player
             for pid, player in self.player_dict.items()
-            if player["stars_total"] > 0
+            if pid != 0 and player["stars_total"] > 0 and player["rock_total"] + player["scissors_total"] + player["paper_total"] > 0
             and sum(player[c.value] for c in Card) > 0
         }
 
@@ -350,8 +350,11 @@ class RestrictedRPSEnv(gym.Env):
 
         # check termination
         if 0 not in self.alive_dict:
+            if self.player_dict[0]["stars_total"] >= 3:
+                reward += self.reward_config.victory
+            else:
+                reward += self.reward_config.eliminated
             terminated = True
-            reward += self.reward_config.eliminated
         elif len(self.alive_dict) == 1:
             terminated = True
             reward += self.reward_config.victory
