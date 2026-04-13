@@ -10,5 +10,6 @@ dependencies = [
     "pandas>=3.0.2",
     "pandera>=0.30.1",
     "pygame>=2.6.1",
+    "pygame-menu>=4.5.2",
     "tqdm>=4.67.3",
 ]
