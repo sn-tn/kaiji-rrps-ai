@@ -13,7 +13,7 @@ next_round_menu = None
 
 cell_rects = {}
 cell_menu = None
-autoplay = True
+autoplay = False
 
 next_round = False
 
