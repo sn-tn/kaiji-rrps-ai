@@ -12,8 +12,8 @@ from gym_core.matchup_dict import MatchupDict
 from gym_core.challenge_table import ChallengeTable, ChallengeSchema
 from gym_core.observation import Observation
 from gym_core.cards import Card
-from gym_core.info import Info
-from gym_core.player import PlayerDict, PlayerID, Budget
+from gym_core.info import Info, GameStatus
+from gym_core.player import PlayerDict, PlayerID, Budget, Player
 from gym_core.matchup_dict import MatchupPair, MatchupDict
 
 
@@ -61,7 +61,7 @@ class RestrictedRPSEnv(gym.Env):
             "scissors_total": 3,
         },
         player_budget: Budget = {
-            "paper_total": 3,
+            "paper_total": 9,
             "rock_total": 0,
             "scissors_total": 0,
         },
@@ -108,7 +108,7 @@ class RestrictedRPSEnv(gym.Env):
                 for i in range(1, self.n_players)
             }
         )
-        self.alive_dict = dict(self.player_dict)
+        self.still_playing_dict = self.player_dict
 
     def _get_obs(self) -> Observation:
 
@@ -121,15 +121,17 @@ class RestrictedRPSEnv(gym.Env):
     def _get_info(
         self,
         initial_alive_player_dict: PlayerDict,
+        game_status: GameStatus,
         challenge_table: ChallengeTable | None = None,
         matchup_dict: MatchupDict | None = None,
     ) -> Info:
         return {
             "challenge_table": challenge_table,
             "matchup_dict": matchup_dict,
-            "alive_player_dict": self.alive_dict,
+            "alive_player_dict": self.still_playing_dict,
             "round_number": self.turn,
             "initial_alive_player_dict": initial_alive_player_dict,
+            "game_status": game_status,
         }
 
     def reset(self, *, seed: int | None = None, options: dict | None = None):
@@ -149,13 +151,28 @@ class RestrictedRPSEnv(gym.Env):
         card = self._action_to_card[action % 3]
         return target_pid, card
 
-    def _update_alive(self):
-        self.alive_dict = {
-            pid: player
-            for pid, player in self.player_dict.items()
-            if pid != 0 and player["stars_total"] > 0 and player["rock_total"] + player["scissors_total"] + player["paper_total"] > 0
-            and sum(player[c.value] for c in Card) > 0
-        }
+    def _total_cards(self, player: Player):
+        return (
+            player["rock_total"]
+            + player["scissors_total"]
+            + player["paper_total"]
+        )
+
+    def _update_playing(self):
+        new_playing_dict = {}
+        for pid in self.still_playing_dict.keys():
+            player = self.player_dict[pid]
+            is_playing = (
+                self._total_cards(player) > 0 and player["stars_total"] > 0
+            )
+
+            if is_playing:
+                new_playing_dict[pid] = player
+
+        new_playing_dict[0] = self.player_dict[
+            0
+        ]  # agent death handled at end of step function
+        self.still_playing_dict = new_playing_dict
 
     # all players passed in through PlayerDict MUST be eligible to play (cards remaining)
 
@@ -193,7 +210,9 @@ class RestrictedRPSEnv(gym.Env):
         for pid in table:
             if pid == 0:
                 card = agent_card
-                targets = [agent_target] + self._agent_rank_opponents(pid, table)
+                targets = [agent_target] + self._agent_rank_opponents(
+                    pid, table
+                )
                 targets = targets[:3]  # keep max 3
             else:
                 card = self._select_move(pid, table)
@@ -307,6 +326,7 @@ class RestrictedRPSEnv(gym.Env):
         reward = 0.0
         terminated = False
         truncated = False
+        game_status: GameStatus = "playing"
         info = {}
 
         # decode action
@@ -318,19 +338,21 @@ class RestrictedRPSEnv(gym.Env):
 
         challenge_table: ChallengeTable | None = None
         matchup_dict: MatchupDict | None = None
-        initial_alive_player_dict: PlayerDict = self.alive_dict
-        if target_pid not in self.alive_dict:
+        initial_alive_player_dict: PlayerDict = self.still_playing_dict
+        if target_pid not in self.still_playing_dict:
             reward += self.reward_config.invalid_move
         elif agent[card.value] == 0:
             reward += self.reward_config.invalid_move
         else:
             # build challenge table
             challenge_table = self.build_challenge_table(
-                self.alive_dict, agent_card=card, agent_target=target_pid
+                self.still_playing_dict,
+                agent_card=card,
+                agent_target=target_pid,
             )
 
             matchup_dict = self.resolve_challenges(
-                self.alive_dict, challenge_table
+                self.still_playing_dict, challenge_table
             )
             # resolve matchups
             agent_stars_before = self.player_dict[0]["stars_total"]
@@ -346,24 +368,33 @@ class RestrictedRPSEnv(gym.Env):
                 reward += self.reward_config.tie_matchup
 
         # update alive_dict
-        self._update_alive()
+        self._update_playing()
 
         # check termination
-        if 0 not in self.alive_dict:
-            if self.player_dict[0]["stars_total"] >= 3:
+        agent_no_cards_left = self._total_cards(self.player_dict[0]) == 0
+        agent_gte_three_stars = self.player_dict[0]["stars_total"] >= 3
+        if agent_no_cards_left:
+            terminated = True
+            # no cards 3 or more stars
+            if agent_gte_three_stars:
+                game_status = "victory"
                 reward += self.reward_config.victory
+            # no cards less than 3 stars
             else:
+                game_status = "lost"
                 reward += self.reward_config.eliminated
-            terminated = True
-        elif len(self.alive_dict) == 1:
-            terminated = True
-            reward += self.reward_config.victory
-        elif self.turn >= self.max_turns:
+        # max turns or last player alive
+        elif self.turn > self.max_turns or len(self.still_playing_dict) == 1:
+            reward += self.reward_config.eliminated
             truncated = True
+            game_status = "lost"
 
         obs = self._get_obs()
         info = self._get_info(
-            initial_alive_player_dict, challenge_table, matchup_dict
+            initial_alive_player_dict,
+            game_status,
+            challenge_table,
+            matchup_dict,
         )
         self.turn += 1
         return obs, reward, terminated, truncated, info
