@@ -175,11 +175,6 @@ class RestrictedRPSEnv(gym.Env):
         available = [card for card in Card if table[pid][card.value] > 0]
         return random.choice(available)
 
-    # TODO
-    def _agent_select_move(self, pid: PlayerID, table: PlayerDict) -> Card:
-        available = [card for card in Card if table[pid][card.value] > 0]
-        return random.choice(available)
-
     def _get_card(
         self, pid: PlayerID, challenge_table: ChallengeTable
     ) -> Card:
@@ -196,16 +191,8 @@ class RestrictedRPSEnv(gym.Env):
 
         for pid in table:
             if pid == 0:
-                card = (
-                    agent_card
-                    if agent_card is not None
-                    else self._agent_select_move(pid, table)
-                )
-                targets = (
-                    [agent_target] + self._agent_rank_opponents(pid, table)
-                    if agent_target is not None
-                    else self._agent_rank_opponents(pid, table)
-                )
+                card = agent_card
+                targets = [agent_target] + self._agent_rank_opponents(pid, table)
                 targets = targets[:3]  # keep max 3
             else:
                 card = self._select_move(pid, table)
@@ -224,11 +211,6 @@ class RestrictedRPSEnv(gym.Env):
         df = pd.DataFrame(
             rows, columns=["player_id", "card", "priority", "target_id"]
         )
-        try:
-            ChallengeSchema.validate(df)
-        except:
-            print("DF: ")
-            raise df
         return ChallengeSchema.validate(df)
 
     def resolve_challenges(
@@ -346,7 +328,6 @@ class RestrictedRPSEnv(gym.Env):
             matchups = self.resolve_challenges(
                 self.alive_dict, challenge_table
             )
-            print()
             # resolve matchups
             agent_stars_before = self.player_dict[0]["stars_total"]
             self.resolve_matchups(matchups, self.player_dict)
@@ -354,7 +335,7 @@ class RestrictedRPSEnv(gym.Env):
 
             # reward based on matchup result
             if agent_stars_after > agent_stars_before:
-                reward += (self.reward_config.win_matchup * self.player_dict[0]["stars_total"])
+                reward += self.reward_config.win_matchup
             elif agent_stars_after < agent_stars_before:
                 reward += self.reward_config.lose_matchup
             else:

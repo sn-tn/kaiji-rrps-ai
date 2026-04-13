@@ -99,8 +99,8 @@ def Q_learning(num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
 Run training if train_flag is set; otherwise, run evaluation using saved Q-table.
 """
 
-num_episodes = 100_000
-decay_rate = 0.9999
+num_episodes = 10_000
+decay_rate = 0.999
 if train_flag:
     Q_table = Q_learning(
         num_episodes=num_episodes,
@@ -143,7 +143,8 @@ if not train_flag:
         obs, info = env.reset()
         total_reward = 0
         terminated = False
-        while not terminated:
+        truncated = False
+        while not terminated and not truncated:
             state = hash(obs)
             try:
                 action = np.random.choice(
