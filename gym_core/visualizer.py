@@ -186,7 +186,7 @@ def wait_for_click():
 
     if autoplay:
         start = pygame.time.get_ticks()
-        while pygame.time.get_ticks() - start < 500:
+        while pygame.time.get_ticks() - start < 50:
             events = pygame.event.get()
             _draw_menus(events)
             if not autoplay:  # toggled off mid-wait, fall through to manual
@@ -205,6 +205,10 @@ def toggle_autoplay():
 
 
 def refresh(terminated: bool, truncated: bool, info: Info):
+    if _grid_rows > 0:
+        from environment_dynamic.grid_view import update_match_log
+        update_match_log(terminated, info)
+
     screen.fill((15, 15, 20))
     y = 10
     font = pygame.font.SysFont("monospace", 14)
