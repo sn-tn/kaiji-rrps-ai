@@ -61,9 +61,9 @@ class RestrictedRPSEnv(gym.Env):
             "scissors_total": 3,
         },
         player_budget: Budget = {
-            "paper_total": 9,
-            "rock_total": 0,
-            "scissors_total": 0,
+            "paper_total": 3,
+            "rock_total": 3,
+            "scissors_total": 3,
         },
         max_turns: int = 500,
         reward_config: RewardConfig | None = None,
@@ -97,18 +97,19 @@ class RestrictedRPSEnv(gym.Env):
 
     def _initialize_players(self):
         self.player_dict = {
-            0: {**self.initial_agent_budget, "stars_total": self.initial_stars}
-        }
-        self.player_dict.update(
-            {
+            0: {
+                **self.initial_agent_budget,
+                "stars_total": self.initial_stars,
+            },
+            **{
                 i: {
                     **self.initial_player_budget,
                     "stars_total": self.initial_stars,
                 }
                 for i in range(1, self.n_players)
-            }
-        )
-        self.still_playing_dict = self.player_dict
+            },
+        }
+        self.still_playing_dict = self.player_dict.copy()
 
     def _get_obs(self) -> Observation:
 
@@ -251,8 +252,9 @@ class RestrictedRPSEnv(gym.Env):
 
         # first pass - match mutual top picks
         # shuffled to avoid priority
-        shuffled = all_ids.copy()
+        shuffled = [pid for pid in all_ids if pid != 0]
         random.shuffle(shuffled)
+        shuffled = [0] + shuffled
 
         for pid in shuffled:
             if pid not in unmatched:
@@ -331,14 +333,16 @@ class RestrictedRPSEnv(gym.Env):
 
         # decode action
         target_pid, card = self.action_resolve(action)
-
+        # print(f"Target {target_pid}", card)
         # validate
         target = self.player_dict[target_pid]
         agent = self.player_dict[0]
 
         challenge_table: ChallengeTable | None = None
         matchup_dict: MatchupDict | None = None
-        initial_alive_player_dict: PlayerDict = self.still_playing_dict
+
+        initial_alive_player_dict: PlayerDict = self.still_playing_dict.copy()
+
         if target_pid not in self.still_playing_dict:
             reward += self.reward_config.invalid_move
         elif agent[card.value] == 0:
@@ -372,8 +376,10 @@ class RestrictedRPSEnv(gym.Env):
 
         # check termination
         agent_no_cards_left = self._total_cards(self.player_dict[0]) == 0
+        agent_no_stars = self.player_dict[0]["stars_total"] <= 0
+
         agent_gte_three_stars = self.player_dict[0]["stars_total"] >= 3
-        if agent_no_cards_left:
+        if agent_no_cards_left or agent_no_stars:
             terminated = True
             # no cards 3 or more stars
             if agent_gte_three_stars:
@@ -381,13 +387,13 @@ class RestrictedRPSEnv(gym.Env):
                 reward += self.reward_config.victory
             # no cards less than 3 stars
             else:
-                game_status = "lost"
+                game_status = "eliminated"
                 reward += self.reward_config.eliminated
         # max turns or last player alive
         elif self.turn > self.max_turns or len(self.still_playing_dict) == 1:
             reward += self.reward_config.eliminated
-            truncated = True
-            game_status = "lost"
+            terminated = True
+            game_status = "eliminated"
 
         obs = self._get_obs()
         info = self._get_info(
