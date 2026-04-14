@@ -1,19 +1,40 @@
-from enviroment_static.rrps_gym import RestrictedRPSEnv
+from environment_static.rrps_gym import RestrictedRPSEnv
 from tqdm import tqdm
 import numpy as np
 import sys
 import pickle
 from gym_core.observation import Observation
+import gym_core.visualizer as vis
 
-env = RestrictedRPSEnv(n_opponents=4, stars=3)
+env = RestrictedRPSEnv(n_opponents=6, stars=3)
 train_flag = "train" in sys.argv
 gui_flag = "gui" in sys.argv
+if gui_flag:
+    vis.init()
 
 
-def hash(obs: Observation) -> tuple:
-    return tuple(
-        (pid, player["stars_total"])
-        for pid, player in sorted(obs["player_dict"].items())
+def obs_to_key(obs: Observation) -> tuple:
+    agent = obs["player_dict"][0]
+    opponents = sorted(
+        ((pid, p) for pid, p in obs["player_dict"].items() if pid != 0),
+        key=lambda x: x[0],
+    )
+    opponent_state = tuple(
+        (
+            p["stars_total"] > 0,
+            p["rock_total"] > 0,
+            p["paper_total"] > 0,
+            p["scissors_total"] > 0,
+        )
+        for _, p in opponents
+    )
+
+    return (
+        agent["stars_total"],
+        agent["rock_total"],
+        agent["paper_total"],
+        agent["scissors_total"],
+        opponent_state,
     )
 
 
@@ -34,8 +55,8 @@ def Q_learning(num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
     Q_update_counts = {}
 
     for _ in tqdm(range(num_episodes)):
-        start_obs = env.reset()
-        prev_state_key = hash(start_obs[0])
+        start_obs, _ = env.reset()
+        prev_state_key = obs_to_key(start_obs)
         if prev_state_key not in Q_update_counts:
             Q_update_counts[prev_state_key] = np.zeros(env.action_space.n)
         if prev_state_key not in Q_table:
@@ -52,10 +73,7 @@ def Q_learning(num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
 
             # transition to state s'
             new_obs, reward, terminated, truncated, info = env.step(action)
-            # if gui_flag:
-            #     vis.refresh(obs, reward, terminated, info, delay=0.1)
-            new_state_key = hash(new_obs)
-            print(new_state_key)
+            new_state_key = obs_to_key(new_obs)
             ## initalize state action if not already
             if new_state_key not in Q_update_counts:
                 Q_update_counts[new_state_key] = np.zeros(env.action_space.n)
@@ -73,8 +91,10 @@ def Q_learning(num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
             Q_table[prev_state_key][action] = Q_new
             Q_update_counts[prev_state_key][action] += 1
 
+            if gui_flag:
+                vis.refresh(terminated, truncated, info)
             # update epsilon and end or continue w/ new step as prev
-            if terminated or truncated:
+            if terminated:
                 epsilon *= decay_rate
                 break
             else:
@@ -86,7 +106,7 @@ def Q_learning(num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
 Run training if train_flag is set; otherwise, run evaluation using saved Q-table.
 """
 
-num_episodes = 1_000_000
+num_episodes = 20_000
 decay_rate = 0.999
 if train_flag:
     Q_table = Q_learning(
@@ -113,6 +133,9 @@ def softmax(x, temp=1.0):
 if not train_flag:
 
     rewards = []
+    wins = 0
+    losses = 0
+    truncations = 0
 
     filename = (
         "Q_table_" + str(num_episodes) + "_" + str(decay_rate) + ".pickle"
@@ -128,7 +151,8 @@ if not train_flag:
         total_reward = 0
         terminated = False
         while not terminated:
-            state = hash(obs)
+            state = obs_to_key(obs)
+
             try:
                 action = np.random.choice(
                     env.action_space.n, p=softmax(Q_table[state])
@@ -139,14 +163,22 @@ if not train_flag:
                 )  # Fallback to random action if state not in Q-table
 
             obs, reward, terminated, truncated, info = env.step(action)
-
+            if gui_flag:
+                vis.refresh(terminated, truncated, info)
             total_reward += reward
-            # if gui_flag:
-            # vis.refresh(
-            #     obs, reward, terminated, info, delay=0.1
-            # )  # Update the game screen [GUI only]
+
+        if info["game_status"] == "victory":
+            wins += 1
+        elif info["game_status"] == "eliminated":
+            losses += 1
+        else:
+            truncations += 1
 
         # print("Total reward:", total_reward)
-    rewards.append(total_reward)
+        rewards.append(total_reward)
     avg_reward = sum(rewards) / len(rewards)
-    print("avg_reward", avg_reward)
+    total = len(rewards)
+    print(f"avg_reward: {avg_reward:.2f}")
+    print(f"win rate:   {wins/total*100:.1f}%  ({wins}/{total})")
+    print(f"loss rate:  {losses/total*100:.1f}%  ({losses}/{total})")
+    print(f"truncated:  {truncations/total*100:.1f}%  ({truncations}/{total})")

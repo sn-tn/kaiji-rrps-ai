@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from tqdm import tqdm
 
-from enviroment_static.rrps_gym import RestrictedRPSEnv
-from enviroment_static.Q_learn import obs_to_key, softmax
+from environment_static.rrps_gym import RestrictedRPSEnv
+from environment_static.Q_learn import obs_to_key, softmax
 from gym_core.cards import Card
 
 # ── config ────────────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-from enviroment_static.rrps_gym import RestrictedRPSEnv
+from environment_static.rrps_gym import RestrictedRPSEnv
 from tqdm import tqdm
 import numpy as np
 import sys
