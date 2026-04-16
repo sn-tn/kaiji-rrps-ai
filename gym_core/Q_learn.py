@@ -3,13 +3,15 @@ from abc import ABC, abstractmethod
 from gym_core.info import Info
 import gymnasium as gym
 from gym_core.rrps_gym import RRPSEnvCore
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Generator
 import numpy as np
 from tqdm import tqdm
 import pickle
 
+ObsType = TypeVar("ObsType")
 
-class RRPSQLearnCore:
+
+class RRPSQLearnCore(Generic[ObsType]):
     def __init__(self, env: RRPSEnvCore, agent_name: str) -> None:
         if not isinstance(env, RRPSEnvCore):
             raise TypeError(
@@ -116,7 +118,8 @@ class RRPSQLearnCore:
         """optional, render visualisation of training"""
         ...
 
-    def play_agent(self, num_episodes: int, gui: bool = False):
+    def play_agent(self, num_episodes: int, gui: bool = False) -> Generator[tuple[ObsType, float, bool, bool, dict], None, None]:
+        """generator that plays through agent for a number of episodes, yields the gym step return values"""
         obs, info = self.env.reset()
         total_reward = 0
         terminated = False
