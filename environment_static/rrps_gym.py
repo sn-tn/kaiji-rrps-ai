@@ -14,8 +14,8 @@ from gym_core.observation import Observation
 from gym_core.cards import Card
 from gym_core.info import Info, GameStatus
 from gym_core.player import PlayerDict, PlayerID, Budget, Player
-from gym_core.matchup_dict import MatchupPair, MatchupDict
-
+from gym_core.matchup_dict import  MatchupDict
+from gym_core.rrps_gym import RRPSEnvCore
 
 @dataclass
 class RewardConfig:
@@ -50,7 +50,7 @@ def resolve(m1: Card, m2: Card) -> int:
 # ── environment ───────────────────────────────────────────────────────────────────
 
 
-class RestrictedRPSEnv(gym.Env):
+class RestrictedRPSEnv(RRPSEnvCore):
     def __init__(
         self,
         n_opponents: int = 6,

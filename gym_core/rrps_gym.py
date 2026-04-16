@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod,  classmethod
 from gym_core.info import Info
 import gymnasium as gym
 
@@ -14,3 +14,11 @@ class RRPSEnvCore(gym.Env, ABC):
     def _get_info(self) -> Info: ...
 
     """return the info object used for reviewing/inspecting/degugging the enviroment"""
+
+    @abstractmethod
+    def step(self, action): ...
+
+    @abstractmethod
+    def reset(self, *, seed=None, options=None): ...
+
+    

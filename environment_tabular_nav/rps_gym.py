@@ -2,9 +2,11 @@ from dataclasses import dataclass
 from typing import TypedDict
 import gymnasium as gym
 from gymnasium import spaces
-from environment_tabular_nav.move import Card, Direction, chebyshev
+from environment_tabular_nav.move import Card, chebyshev
 from environment_tabular_nav.player import Card, Player, AgentPlayer
 from environment_tabular_nav.matchup_table import MatchupTable
+from gym_core.rrps_gym import RRPSEnvCore
+
 
 class BudgetObs(TypedDict):
     rock: int
@@ -53,7 +55,7 @@ def resolve(m1: Card, m2: Card) -> int:
 # ── environment ───────────────────────────────────────────────────────────────────
 
 
-class RestrictedRPSEnv(gym.Env):
+class RestrictedRPSEnv(RRPSEnvCore):
     """
     A single-agent Gymnasium environment for Restricted Rock Paper Scissors.
 
@@ -105,9 +107,9 @@ class RestrictedRPSEnv(gym.Env):
     # action constants
     _MOVE_ACTIONS = {
         0: (0, -1),  # up
-        1: (0, 1),   # down
+        1: (0, 1),  # down
         2: (-1, 0),  # left
-        3: (1, 0),   # right
+        3: (1, 0),  # right
     }
     _RPS_ACTIONS = {4: Card.ROCK, 5: Card.PAPER, 6: Card.SCISSORS}
 
@@ -187,7 +189,11 @@ class RestrictedRPSEnv(gym.Env):
         for op in self._opponents:
             op.position = self._random_position()
             op.stars = self.initial_stars
-            op.budget = {Card.ROCK: self.initial_budget, Card.PAPER: self.initial_budget, Card.SCISSORS: self.initial_budget}
+            op.budget = {
+                Card.ROCK: self.initial_budget,
+                Card.PAPER: self.initial_budget,
+                Card.SCISSORS: self.initial_budget,
+            }
         self.matchup_table = MatchupTable()
 
     def _alive_opponents(self) -> list[Player]:
