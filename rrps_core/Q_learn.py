@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from abc import ABC, abstractmethod
-from rrps_core.info import Info
+from rrps_core.types.info import Info
 import gymnasium as gym
 from rrps_core.rrps_gym import RRPSEnvCore
 from typing import TypeVar, Generic, Generator

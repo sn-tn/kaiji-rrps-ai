@@ -8,13 +8,13 @@ import pandas as pd
 import pandera.pandas as pa
 import numpy as np
 
-from rrps_core.matchup_dict import MatchupDict
-from rrps_core.challenge_table import ChallengeTable, ChallengeSchema
-from rrps_core.observation import Observation
-from rrps_core.cards import Card
-from rrps_core.info import Info, GameStatus
-from rrps_core.player import PlayerDict, PlayerID, Budget, Player
-from rrps_core.matchup_dict import MatchupDict
+from rrps_core.types.matchup_dict import MatchupDict
+from rrps_core.types.challenge_table import ChallengeTable, ChallengeSchema
+from rrps_core.types.observation import Observation
+from rrps_core.types.cards import Card
+from rrps_core.types.info import Info, GameStatus
+from rrps_core.types.player import PlayerDict, PlayerID, Budget, Player
+from rrps_core.types.matchup_dict import MatchupDict
 from rrps_core.reward_config import RewardConfig as _BaseRewardConfig
 from rrps_core.rrps_gym import RRPSEnvCore
 

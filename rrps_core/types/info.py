@@ -1,7 +1,7 @@
 from typing import TypedDict
-from rrps_core.matchup_dict import MatchupDict
-from rrps_core.challenge_table import ChallengeTable
-from rrps_core.player import PlayerDict
+from rrps_core.types.matchup_dict import MatchupDict
+from rrps_core.types.challenge_table import ChallengeTable
+from rrps_core.types.player import PlayerDict
 from typing import Literal
 from typing import TypeAlias
 

@@ -2,7 +2,7 @@ import pygame
 import sys
 import pygame_menu
 import pandas as pd
-from rrps_core.info import Info
+from rrps_core.types.info import Info
 
 FPS = 60
 
