@@ -4,6 +4,7 @@ from gym_core.player import PlayerID, PlayerDict
 
 class Observation(TypedDict):
     """player 0 is always the agent"""
+
     player_dict: PlayerDict
     turn: int
 
@@ -19,9 +20,3 @@ class PlayerObs(TypedDict):
     stars_total: int
     budget: BudgetObs
     position: tuple[int, int]
-
-
-class NavObservation(TypedDict):
-    agent: PlayerObs
-    opponent: PlayerObs
-    opponents_alive: int

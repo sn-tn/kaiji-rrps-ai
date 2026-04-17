@@ -117,32 +117,15 @@ class RestrictedRPSEnv(RRPSEnvCore):
         }
         self.player_dict: PlayerDict = {}
 
-    def _spread_positions(self):
-        """Distribute players evenly in a grid."""
-        rows = cols = self.grid_size
-        n = self.n_players
-        row_positions = np.linspace(
-            0, rows - 1, int(np.ceil(np.sqrt(n))), dtype=int
-        )
-        col_positions = np.linspace(
-            0, cols - 1, int(np.ceil(np.sqrt(n))), dtype=int
-        )
-        grid = np.array(np.meshgrid(row_positions, col_positions)).T.reshape(
-            -1, 2
-        )
-        return grid[:n]
+    def _random_position(self) -> np.ndarray:
+        return self.np_random.integers(0, self.grid_size, size=2).astype(np.float32)
 
     def _initialize_players(self):
-        positions = self._spread_positions()
         self.player_dict = {
             i: {
-                **(
-                    self.initial_agent_budget
-                    if i == 0
-                    else self.initial_player_budget
-                ),
+                **(self.initial_agent_budget if i == 0 else self.initial_player_budget),
                 "stars_total": self.initial_stars,
-                "position": positions[i],
+                "position": self._random_position(),
             }
             for i in range(self.n_players)
         }

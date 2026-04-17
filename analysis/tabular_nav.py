@@ -29,7 +29,11 @@ args = parser.parse_args()
 
 DECAY_RATE = 0.999
 
-env = RestrictedRPSEnv(n_opponents=30, stars=3, budget=4, grid_size=12)
+env = RestrictedRPSEnv(
+    n_opponents=30,
+    stars=3,
+    grid_size=12,
+)
 agent = QLearnTabularNav(agent_name=args.file, env=env)
 
 if args.load:

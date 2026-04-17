@@ -159,5 +159,6 @@ class RRPSQLearnCore(Generic[ObsType]):
 
     def render_gui(self, terminated, truncated, info):
         if not vis.is_initialized():
-            vis.init()
+            grid_size = getattr(self.env, "grid_size", 0)
+            vis.init(grid_rows=grid_size, grid_cols=grid_size)
         vis.refresh(terminated, truncated, info)
