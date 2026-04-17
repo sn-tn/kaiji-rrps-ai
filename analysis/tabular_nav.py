@@ -30,7 +30,7 @@ args = parser.parse_args()
 DECAY_RATE = 0.999
 
 env = RestrictedRPSEnv(
-    n_opponents=30,
+    n_opponents=15,
     stars=3,
     grid_size=12,
 )

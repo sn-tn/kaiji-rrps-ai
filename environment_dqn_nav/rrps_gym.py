@@ -13,11 +13,6 @@ from gym_core.reward_config import RewardConfig as _BaseRewardConfig
 from gym_core.rrps_gym import RRPSEnvCore
 
 
-@dataclass
-class RewardConfig(_BaseRewardConfig):
-    eliminated: float = -2000
-    victory: float = 2000
-
 
 # ── helpers ────────────────────────────────────────────────────────────────────────────
 
@@ -56,7 +51,7 @@ class RestrictedRPSEnv(RRPSEnvCore):
         grid_size: int = 6,
         max_turns: int = 500,
         reward_config: RewardConfig | None = None,
-        n_obs_opponents: int | None = None,
+        n_obs_opponents: int | None = 4,
         view_radius: int = 2,
     ):
         super().__init__()
@@ -64,9 +59,7 @@ class RestrictedRPSEnv(RRPSEnvCore):
         self.n_opponents = n_opponents
         # How many nearest opponents to include in the observation.
         # Defaults to all opponents; set lower to cap obs size when scaling.
-        self.n_obs_opponents = (
-            n_obs_opponents if n_obs_opponents is not None else n_opponents
-        )
+        self.n_obs_opponents = n_obs_opponents
         self.view_radius = view_radius
         self.initial_stars = stars
         self.initial_agent_budget = agent_budget
@@ -98,6 +91,7 @@ class RestrictedRPSEnv(RRPSEnvCore):
             * self.n_obs_opponents,
             dtype=np.float32,
         )
+
         self.observation_space = spaces.Box(
             low=np.zeros(n_features, dtype=np.float32),
             high=high,
@@ -118,12 +112,18 @@ class RestrictedRPSEnv(RRPSEnvCore):
         self.player_dict: PlayerDict = {}
 
     def _random_position(self) -> np.ndarray:
-        return self.np_random.integers(0, self.grid_size, size=2).astype(np.float32)
+        return self.np_random.integers(0, self.grid_size, size=2).astype(
+            np.float32
+        )
 
     def _initialize_players(self):
         self.player_dict = {
             i: {
-                **(self.initial_agent_budget if i == 0 else self.initial_player_budget),
+                **(
+                    self.initial_agent_budget
+                    if i == 0
+                    else self.initial_player_budget
+                ),
                 "stars_total": self.initial_stars,
                 "position": self._random_position(),
             }

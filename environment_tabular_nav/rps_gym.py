@@ -15,9 +15,7 @@ from gym_core.reward_config import RewardConfig as _BaseRewardConfig
 from gym_core.rrps_gym import RRPSEnvCore
 
 
-@dataclass
-class RewardConfig(_BaseRewardConfig):
-    pass
+
 
 
 def resolve(m1: Card, m2: Card) -> int:
