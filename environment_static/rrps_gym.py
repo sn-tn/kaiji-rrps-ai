@@ -8,28 +8,23 @@ import pandas as pd
 import pandera.pandas as pa
 import numpy as np
 
-from gym_core.matchup_dict import MatchupDict
-from gym_core.challenge_table import ChallengeTable, ChallengeSchema
-from gym_core.observation import Observation
-from gym_core.cards import Card
-from gym_core.info import Info, GameStatus
-from gym_core.player import PlayerDict, PlayerID, Budget, Player
-from gym_core.matchup_dict import MatchupDict
-from gym_core.rrps_gym import RRPSEnvCore
+from rrps_core.matchup_dict import MatchupDict
+from rrps_core.challenge_table import ChallengeTable, ChallengeSchema
+from rrps_core.observation import Observation
+from rrps_core.cards import Card
+from rrps_core.info import Info, GameStatus
+from rrps_core.player import PlayerDict, PlayerID, Budget, Player
+from rrps_core.matchup_dict import MatchupDict
+from rrps_core.reward_config import RewardConfig as _BaseRewardConfig
+from rrps_core.rrps_gym import RRPSEnvCore
 
 
 @dataclass
-class RewardConfig:
-    win_matchup: float = 100
-    lose_matchup: float = -100
+class RewardConfig(_BaseRewardConfig):
     tie_matchup: float = 10
-    eliminated: float = -500
     victory: float = 2000
-    invalid_move: float = -10
     within_challenge_range: float = 1
     approach_opponent: float = 0.5
-    has_cards_at_end: float = -200
-    has_sub_3_stars_at_end: float = -300
 
 
 # ── helpers ────────────────────────────────────────────────────────────────────────────

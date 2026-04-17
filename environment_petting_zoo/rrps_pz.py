@@ -13,8 +13,8 @@ from gymnasium.utils import seeding
 from pettingzoo import ParallelEnv
 from pettingzoo.utils import parallel_to_aec, wrappers
 
-from gym_core.cards import Card
-from gym_core.player import Budget, Player, PlayerDict
+from rrps_core.cards import Card
+from rrps_core.player import Budget, Player, PlayerDict
 
 
 CARD_ORDER: tuple[Card, Card, Card] = (Card.rock, Card.paper, Card.scissors)

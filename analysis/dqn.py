@@ -2,65 +2,56 @@ import sys, os, argparse
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from environment_static.Q_learn import QLearnStatic
-from environment_static.rrps_gym import StaticRRPSEnv
+from environment_dqn_nav.Q_learn import QLearnDQNNav
+from environment_dqn_nav.rrps_gym import RestrictedRPSEnv
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--train", type=int, default=20_000, help="number of training episodes"
+    "--train", type=int, default=2_000_000, help="number of training timesteps"
 )
 parser.add_argument(
-    "--gui", action="store_true", help="enable GUI during training"
+    "--gui", action="store_true", help="enable GUI during evaluation"
 )
 parser.add_argument(
     "--file",
     type=str,
-    default="monty_hall",
+    default="dqn_nav",
     help="agent name used for save filename",
 )
 parser.add_argument(
     "--load",
     type=str,
     default=None,
-    help="path to a saved agent pickle to skip training",
+    help="path to a saved model to skip training",
 )
 args = parser.parse_args()
 
-DECAY_RATE = 0.999
-
-env = StaticRRPSEnv(
-    n_opponents=1,
-    agent_budget={"paper_total": 3, "rock_total": 3, "scissors_total": 3},
-    player_budget={"paper_total": 3, "rock_total": 3, "scissors_total": 3},
+env = RestrictedRPSEnv(
+    n_opponents=10, stars=3, n_obs_opponents=4, grid_size=14
 )
-monty_hall = QLearnStatic(agent_name=args.file, env=env)
+agent = QLearnDQNNav(agent_name=args.file, env=env)
 
 if args.load:
-    monty_hall.load_from_path(args.load)
+    agent.load(args.load)
 else:
-    monty_hall.tabular_train(
-        gamma=0.9,
-        train_episodes=args.train,
-        decay_rate=DECAY_RATE,
-        gui=args.gui,
-    )
+    agent.train(total_timesteps=args.train)
 
 rewards = []
 wins = 0
 losses = 0
-truncations = 0
 
 for _ in tqdm(range(10_000)):
-    total_reward = 0
-    for obs, reward, terminated, truncated, info in monty_hall.play_agent():
+    total_reward = 0.0
+    for obs, reward, terminated, truncated, info in agent.play_agent(
+        gui=args.gui
+    ):
         total_reward += reward
     rewards.append(total_reward)
     if info["game_status"] == "victory":
         wins += 1
     elif info["game_status"] == "eliminated":
         losses += 1
-
 
 total = len(rewards)
 avg_reward = sum(rewards) / total

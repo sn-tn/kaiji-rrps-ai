@@ -1,13 +1,13 @@
 from typing import Dict, Any
 from abc import ABC, abstractmethod
-from gym_core.info import Info
+from rrps_core.info import Info
 import gymnasium as gym
-from gym_core.rrps_gym import RRPSEnvCore
+from rrps_core.rrps_gym import RRPSEnvCore
 from typing import TypeVar, Generic, Generator
 import numpy as np
 from tqdm import tqdm
 import pickle
-import gym_core.visualizer as vis
+import rrps_core.visualizer as vis
 
 ObsType = TypeVar("ObsType")
 
@@ -108,7 +108,7 @@ class RRPSQLearnCore(Generic[ObsType]):
                     self.render_gui(terminated, truncated, info)
                 # update epsilon and end or continue w/ new step as prev
 
-                if terminated:
+                if terminated or truncated:
                     epsilon *= decay_rate
                     break
                 else:
@@ -123,11 +123,13 @@ class RRPSQLearnCore(Generic[ObsType]):
     def load_agent(
         self, agent_name: str, train_episodes: int, decay_rate: float
     ):
-        with open(
-            self._file_name(agent_name, train_episodes, decay_rate), "rb"
-        ) as handle:
-            self.Q_table = pickle.load(handle)
+        self.load_from_path(self._file_name(agent_name, train_episodes, decay_rate))
         self.agent_name = agent_name
+
+    def load_from_path(self, path: str):
+        with open(path, "rb") as handle:
+            self.Q_table = pickle.load(handle)
+        self.agent_name = path
 
     def play_agent(
         self, gui: bool = False
@@ -135,7 +137,8 @@ class RRPSQLearnCore(Generic[ObsType]):
         obs, info = self.env.reset()
         total_reward = 0
         terminated = False
-        while not terminated:
+        truncated = False
+        while not terminated and not truncated:
             try:
                 action = np.random.choice(
                     self.env.action_space.n, p=self.agent_move(obs)
@@ -156,5 +159,6 @@ class RRPSQLearnCore(Generic[ObsType]):
 
     def render_gui(self, terminated, truncated, info):
         if not vis.is_initialized():
-            vis.init()
+            grid_size = getattr(self.env, "grid_size", 0)
+            vis.init(grid_rows=grid_size, grid_cols=grid_size)
         vis.refresh(terminated, truncated, info)

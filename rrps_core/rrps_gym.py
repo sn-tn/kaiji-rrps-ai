@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar
 from abc import ABC, abstractmethod
-from gym_core.info import Info
+from rrps_core.info import Info
 import gymnasium as gym
 
 ObsType = TypeVar("ObsType")

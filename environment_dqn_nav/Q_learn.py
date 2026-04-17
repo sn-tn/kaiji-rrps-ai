@@ -1,115 +1,70 @@
-import sys
-from pathlib import Path
-import pandas as pd
-from tqdm import tqdm
 from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import ProgressBarCallback
+from rrps_core.rrps_gym import RRPSEnvCore
+from typing import Generator
+import rrps_core.visualizer as vis
 
-from environment_dqn_nav.rrps_gym import RestrictedRPSEnv
-import gym_core.visualizer as vis
-import argparse
 
-# Fixed obs cap — agent sees at most 4 nearest opponents within view_radius.
-# Keeps obs shape (30,) constant so a trained model works across any n_opponents.
-N_OBS_OPPONENTS = 4
+class QLearnDQNNav:
+    def __init__(self, env: RRPSEnvCore, agent_name: str | None = None):
+        self.env = env
+        self.agent_name = agent_name
+        self._model: DQN | None = None
 
-env = RestrictedRPSEnv(
-    n_opponents=10, stars=3, n_obs_opponents=N_OBS_OPPONENTS, grid_size=14
-)
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--file")
-parser.add_argument("--train", action="store_true")
-parser.add_argument("--gui", action="store_true")
-args = parser.parse_args()
-MODEL_PATH = args.file
-
-train_flag = args.train
-gui_flag = args.gui
-if gui_flag and not train_flag:
-    vis.init(grid_rows=env.grid_size, grid_cols=env.grid_size)
-
-# ── Training ───────────────────────────────────────────────────────────────────
-num_episodes = 2_000_000
-gamma = 0.9
-
-if train_flag:
-    model = DQN(
-        "MlpPolicy",
-        env,
-        verbose=1,
-        learning_rate=1e-4,
-        buffer_size=100_000,
-        learning_starts=2_000,
-        batch_size=64,
-        gamma=gamma,
-        target_update_interval=500,
-        exploration_fraction=0.5,
-        exploration_final_eps=0.05,
-        policy_kwargs=dict(net_arch=[128, 128]),
-    )
-    model.learn(total_timesteps=num_episodes, callback=ProgressBarCallback())
-    model.save(MODEL_PATH)
-    print(f"Saved to {MODEL_PATH}.zip")
-
-# ── Evaluation ─────────────────────────────────────────────────────────────────
-
-if not train_flag:
-    model = DQN.load(MODEL_PATH, env=env)
-    print(f"Loaded {MODEL_PATH}.zip")
-
-    rewards = []
-    wins = 0
-    losses = 0
-    truncations = 0
-    rows = []
-    n_eval_episodes = 10_000
-
-    for episode in tqdm(range(n_eval_episodes)):
-        obs, _ = env.reset()
-        total_reward = 0.0
-        terminated = False
-
-        while not terminated:
-            action, _ = model.predict(obs, deterministic=True)
-            obs, reward, terminated, truncated, info = env.step(int(action))
-            total_reward += reward
-            if gui_flag:
-                vis.refresh(terminated, truncated, info)
-
-        status = info["game_status"]
-        agent = info["alive_player_dict"][0]
-        rows.append(
-            {
-                "episode": episode,
-                "game_status": status,
-                "total_reward": total_reward,
-                "turns": info["round_number"],
-                "agent_stars": agent["stars_total"],
-                "agent_cards_left": (
-                    agent["rock_total"]
-                    + agent["paper_total"]
-                    + agent["scissors_total"]
-                ),
-                "opponents_alive": len(info["alive_player_dict"]) - 1,
-            }
+    def train(
+        self,
+        total_timesteps: int = 2_000_000,
+        gamma: float = 0.9,
+        learning_rate: float = 1e-4,
+        buffer_size: int = 100_000,
+        learning_starts: int = 2_000,
+        batch_size: int = 64,
+        target_update_interval: int = 500,
+        exploration_fraction: float = 0.5,
+        exploration_final_eps: float = 0.05,
+        hidden_size: int = 128,
+        agent_name: str | None = None,
+    ):
+        name = agent_name or self.agent_name
+        if name is None:
+            raise ValueError("agent_name must be provided")
+        self._model = DQN(
+            "MlpPolicy",
+            self.env,
+            verbose=1,
+            learning_rate=learning_rate,
+            buffer_size=buffer_size,
+            learning_starts=learning_starts,
+            batch_size=batch_size,
+            gamma=gamma,
+            target_update_interval=target_update_interval,
+            exploration_fraction=exploration_fraction,
+            exploration_final_eps=exploration_final_eps,
+            policy_kwargs=dict(net_arch=[hidden_size, hidden_size]),
         )
+        self._model.learn(
+            total_timesteps=total_timesteps, callback=ProgressBarCallback()
+        )
+        self._model.save(name)
+        self.agent_name = name
+        return self
 
-        rewards.append(total_reward)
-        if status == "victory":
-            wins += 1
-        elif status == "eliminated":
-            losses += 1
-        else:
-            truncations += 1
+    def load(self, path: str):
+        self._model = DQN.load(path, env=self.env)
+        self.agent_name = path
+        return self
 
-    out_path = Path("analysis") / f"dynamic_results_{n_eval_episodes}.csv"
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(rows).to_csv(out_path, index=False)
-    print(f"Saved {out_path}")
-
-    total = len(rewards)
-    print(f"avg_reward: {sum(rewards)/total:.2f}")
-    print(f"win rate:   {wins/total*100:.1f}%  ({wins}/{total})")
-    print(f"loss rate:  {losses/total*100:.1f}%  ({losses}/{total})")
-    print(f"truncated:  {truncations/total*100:.1f}%  ({truncations}/{total})")
+    def play_agent(
+        self, gui: bool = False
+    ) -> Generator[tuple, None, None]:
+        if self._model is None:
+            raise ValueError("No model loaded")
+        obs, _ = self.env.reset()
+        terminated = False
+        truncated = False
+        while not (terminated or truncated):
+            action, _ = self._model.predict(obs, deterministic=True)
+            obs, reward, terminated, truncated, info = self.env.step(int(action))
+            yield obs, reward, terminated, truncated, info
+            if gui:
+                vis.refresh(terminated, truncated, info)

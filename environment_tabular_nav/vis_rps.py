@@ -5,8 +5,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pygame
 import time
 from environment_tabular_nav.rps_gym import RestrictedRPSEnv
-from environment_tabular_nav.move import Card
-from environment_tabular_nav.player import BasicPlayer
 
 CELL_SIZE = 40
 CONSOLE_WIDTH = 350
@@ -26,15 +24,7 @@ game_ended = False
 action_results = []
 clock = None
 
-opponents = [
-    BasicPlayer(
-        player_id=i + 1,
-        stars=3,
-        budget=4,
-    )
-    for i in range(30)
-]
-env = RestrictedRPSEnv(opponents=opponents, stars=3, budget=4, grid_size=12)
+env = RestrictedRPSEnv(n_opponents=30, stars=3, budget=4, grid_size=12)
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -103,13 +93,13 @@ def draw_agent(pos: tuple[int, int]):
 
 
 def draw_opponents():
-    for op in game._opponents:
-        if not op.is_alive():
+    for pid, op in game._players.items():
+        if pid == 0 or not game._is_alive(pid):
             continue
-        px, py = _pos_to_pixel(op.position)
+        px, py = _pos_to_pixel(op["position"])
         cx, cy = px + CELL_SIZE // 2, py + CELL_SIZE // 2
         pygame.draw.circle(screen, BURGUNDY, (cx, cy), CELL_SIZE // 3)
-        label = pygame.font.Font(None, 20).render(str(op.id), True, WHITE)
+        label = pygame.font.Font(None, 20).render(str(pid), True, WHITE)
         screen.blit(label, label.get_rect(center=(cx, cy)))
 
 
@@ -129,7 +119,6 @@ def _wrap_text(font, text: str, max_width: int) -> list[str]:
 
 
 def draw_console(reward: float, info: dict):
-    ag = game._agent
     gp = _grid_px()
     cx = gp + 10
     y = 10
@@ -143,20 +132,14 @@ def draw_console(reward: float, info: dict):
     screen.blit(f_title.render("Game State", True, BLUE), (cx, y))
     y += 35
 
-    if ag:
-        alive_ops = sum(1 for p in game._opponents if p.is_alive())
-        in_range = sum(
-            1
-            for p in game._opponents
-            if p.is_alive() and game._in_range(ag, p)
-        )
+    if game._players:
+        ag = game._players[0]
+        alive_ops = len(game._alive_opponents())
+        in_range = sum(1 for pid in game._alive_opponents() if game._in_range(0, pid))
         info_lines = [
-            f"• Stars:    {ag.stars}",
-            f"• Position: {ag.position}",
-            (
-                f"• Budget    R:{ag.budget[Card.ROCK]} "
-                f" P:{ag.budget[Card.PAPER]}  S:{ag.budget[Card.SCISSORS]}"
-            ),
+            f"• Stars:    {ag['stars']}",
+            f"• Position: {ag['position']}",
+            f"• Budget    R:{ag['rock']}  P:{ag['paper']}  S:{ag['scissors']}",
             f"• Opponents alive: {alive_ops}",
             f"• In range:        {in_range}",
             f"• Last reward: {reward:+.1f}",
@@ -230,10 +213,11 @@ def display_end_message(message: str):
 def _render_frame(reward: float, info: dict):
     screen.fill(WHITE)
     draw_grid()
-    if game._agent:
-        draw_challenge_radius(game._agent.position)
+    if game._players:
+        agent_pos = game._players[0]["position"]
+        draw_challenge_radius(agent_pos)
         draw_opponents()
-        draw_agent(game._agent.position)
+        draw_agent(agent_pos)
     draw_console(reward, info)
 
 

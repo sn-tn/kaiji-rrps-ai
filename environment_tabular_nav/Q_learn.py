@@ -1,29 +1,36 @@
-from gym_core.Q_learn import RRPSQLearnAgentCore
-from environment_static.rrps_gym import RestrictedRPSEnv
-from environment_static.rrps_gym import Observation
+from rrps_core.Q_learn import RRPSQLearnCore
+from environment_tabular_nav.rps_gym import Observation
 import numpy as np
 
 
-class QLearnTabularNav(RRPSQLearnAgentCore):
-    def __init__(self):
-        super().__init__(env=RestrictedRPSEnv(n_opponents=1, stars=3))
-
+class QLearnTabularNav(RRPSQLearnCore[Observation]):
     def hash(self, obs):
-        ag = obs["agent"]
-        opp = obs["opponent"]
+        agent = obs["player_dict"][0]
+        agent_pos = agent["position"]
+        initial = self.env.initial_player_budget
 
-        rel_dx = np.sign(opp["position"][0] - ag["position"][0])  # -1, 0, 1
-        rel_dy = np.sign(opp["position"][1] - ag["position"][1])  # -1, 0, 1
-        key = (
-            ag["stars"],
-            ag["budget"]["rock"],
-            ag["budget"]["paper"],
-            ag["budget"]["scissors"],
-            opp["stars"],
-            opp["budget"]["rock"] > 0,
-            opp["budget"]["paper"] > 0,
-            opp["budget"]["scissors"] > 0,
+        nearest_pid = self.env._nearest(0, self.env._alive_opponents())
+        if nearest_pid is not None:
+            opp_state = self.env.player_dict[nearest_pid]
+            opp_pos = opp_state["position"]
+            rel_dx = int(np.sign(opp_pos[0] - agent_pos[0]))
+            rel_dy = int(np.sign(opp_pos[1] - agent_pos[1]))
+            nearest_state = (
+                opp_state["stars_total"],
+                initial["rock_total"] - opp_state["rock_total"],
+                initial["paper_total"] - opp_state["paper_total"],
+                initial["scissors_total"] - opp_state["scissors_total"],
+            )
+        else:
+            rel_dx, rel_dy = 0, 0
+            nearest_state = (0, 0, 0, 0)
+
+        return (
+            agent["stars_total"],
+            agent["rock_total"],
+            agent["paper_total"],
+            agent["scissors_total"],
+            nearest_state,
             rel_dx,
             rel_dy,
         )
-        return key

@@ -5,22 +5,13 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 
-from gym_core.matchup_dict import MatchupDict
-from gym_core.cards import Card
-from gym_core.info import Info, GameStatus
-from gym_core.player import PlayerDict, PlayerID, Budget, Player
-from gym_core.rrps_gym import RRPSEnvCore
+from rrps_core.matchup_dict import MatchupDict
+from rrps_core.cards import Card
+from rrps_core.info import Info, GameStatus
+from rrps_core.player import PlayerDict, PlayerID, Budget, Player
+from rrps_core.reward_config import RewardConfig as _BaseRewardConfig
+from rrps_core.rrps_gym import RRPSEnvCore
 
-@dataclass
-class RewardConfig:
-    win_matchup: float = 100
-    lose_matchup: float = -100
-    tie_matchup: float = 0
-    eliminated: float = -2000
-    victory: float = 2000
-    invalid_move: float = -10
-    within_challenge_range: float = 0
-    approach_opponent: float = 0
 
 
 # ── helpers ────────────────────────────────────────────────────────────────────────────
@@ -60,7 +51,7 @@ class RestrictedRPSEnv(RRPSEnvCore):
         grid_size: int = 6,
         max_turns: int = 500,
         reward_config: RewardConfig | None = None,
-        n_obs_opponents: int | None = None,
+        n_obs_opponents: int | None = 4,
         view_radius: int = 2,
     ):
         super().__init__()
@@ -68,9 +59,7 @@ class RestrictedRPSEnv(RRPSEnvCore):
         self.n_opponents = n_opponents
         # How many nearest opponents to include in the observation.
         # Defaults to all opponents; set lower to cap obs size when scaling.
-        self.n_obs_opponents = (
-            n_obs_opponents if n_obs_opponents is not None else n_opponents
-        )
+        self.n_obs_opponents = n_obs_opponents
         self.view_radius = view_radius
         self.initial_stars = stars
         self.initial_agent_budget = agent_budget
@@ -102,6 +91,7 @@ class RestrictedRPSEnv(RRPSEnvCore):
             * self.n_obs_opponents,
             dtype=np.float32,
         )
+
         self.observation_space = spaces.Box(
             low=np.zeros(n_features, dtype=np.float32),
             high=high,
@@ -121,23 +111,12 @@ class RestrictedRPSEnv(RRPSEnvCore):
         }
         self.player_dict: PlayerDict = {}
 
-    def _spread_positions(self):
-        """Distribute players evenly in a grid."""
-        rows = cols = self.grid_size
-        n = self.n_players
-        row_positions = np.linspace(
-            0, rows - 1, int(np.ceil(np.sqrt(n))), dtype=int
+    def _random_position(self) -> np.ndarray:
+        return self.np_random.integers(0, self.grid_size, size=2).astype(
+            np.float32
         )
-        col_positions = np.linspace(
-            0, cols - 1, int(np.ceil(np.sqrt(n))), dtype=int
-        )
-        grid = np.array(np.meshgrid(row_positions, col_positions)).T.reshape(
-            -1, 2
-        )
-        return grid[:n]
 
     def _initialize_players(self):
-        positions = self._spread_positions()
         self.player_dict = {
             i: {
                 **(
@@ -146,7 +125,7 @@ class RestrictedRPSEnv(RRPSEnvCore):
                     else self.initial_player_budget
                 ),
                 "stars_total": self.initial_stars,
-                "position": positions[i],
+                "position": self._random_position(),
             }
             for i in range(self.n_players)
         }
