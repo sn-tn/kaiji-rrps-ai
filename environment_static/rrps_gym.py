@@ -1,13 +1,10 @@
 from __future__ import annotations
+import copy
 import random
 from dataclasses import dataclass
-from typing import TypedDict
 import gymnasium as gym
 from gymnasium import spaces
 import pandas as pd
-import pandera.pandas as pa
-import numpy as np
-
 from rrps_core.types.matchup_dict import MatchupDict
 from rrps_core.types.challenge_table import ChallengeTable, ChallengeSchema
 from rrps_core.types.observation import Observation
@@ -15,17 +12,8 @@ from rrps_core.types.cards import Card
 from rrps_core.types.info import Info, GameStatus
 from rrps_core.types.player import PlayerDict, PlayerID, Budget, Player
 from rrps_core.types.matchup_dict import MatchupDict
-from rrps_core.reward_config import RewardConfig as _BaseRewardConfig
+from rrps_core.reward_config import RewardConfig
 from rrps_core.rrps_gym import RRPSEnvCore
-
-
-@dataclass
-class RewardConfig(_BaseRewardConfig):
-    tie_matchup: float = 10
-    victory: float = 2000
-    within_challenge_range: float = 1
-    approach_opponent: float = 0.5
-
 
 # ── helpers ────────────────────────────────────────────────────────────────────────────
 
@@ -337,7 +325,9 @@ class StaticRRPSEnv(RRPSEnvCore[Observation]):
         challenge_table: ChallengeTable | None = None
         matchup_dict: MatchupDict | None = None
 
-        initial_alive_player_dict: PlayerDict = self.still_playing_dict.copy()
+        initial_alive_player_dict: PlayerDict = copy.deepcopy(
+            self.still_playing_dict
+        )
 
         if target_pid not in self.still_playing_dict:
             reward += self.reward_config.invalid_move

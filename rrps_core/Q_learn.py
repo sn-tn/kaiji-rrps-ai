@@ -150,10 +150,10 @@ class RRPSQLearnCore(Generic[ObsType]):
 
             obs, reward, terminated, truncated, info = self.env.step(action)
 
-            yield obs, reward, terminated, truncated, info
-
             if gui:
                 self.render_gui(terminated, truncated, info)
+
+            yield obs, reward, terminated, truncated, info
             total_reward += reward
         return self
 

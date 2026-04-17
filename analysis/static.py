@@ -31,8 +31,8 @@ DECAY_RATE = 0.999
 
 env = StaticRRPSEnv(
     n_opponents=1,
-    agent_budget={"paper_total": 3, "rock_total": 3, "scissors_total": 3},
-    player_budget={"paper_total": 3, "rock_total": 3, "scissors_total": 3},
+    agent_budget={"paper_total": 1, "rock_total": 1, "scissors_total": 1},
+    player_budget={"paper_total": 1, "rock_total": 1, "scissors_total": 1},
 )
 monty_hall = QLearnStatic(agent_name=args.file, env=env)
 
@@ -53,7 +53,9 @@ truncations = 0
 
 for _ in tqdm(range(10_000)):
     total_reward = 0
-    for obs, reward, terminated, truncated, info in monty_hall.play_agent():
+    for obs, reward, terminated, truncated, info in monty_hall.play_agent(
+        gui=args.gui
+    ):
         total_reward += reward
     rewards.append(total_reward)
     if info["game_status"] == "victory":
