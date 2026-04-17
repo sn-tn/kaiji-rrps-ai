@@ -1,13 +1,13 @@
 from typing import Dict, Any
 from abc import ABC, abstractmethod
-from gym_core.info import Info
+from rrps_core.info import Info
 import gymnasium as gym
-from gym_core.rrps_gym import RRPSEnvCore
+from rrps_core.rrps_gym import RRPSEnvCore
 from typing import TypeVar, Generic, Generator
 import numpy as np
 from tqdm import tqdm
 import pickle
-import gym_core.visualizer as vis
+import rrps_core.visualizer as vis
 
 ObsType = TypeVar("ObsType")
 

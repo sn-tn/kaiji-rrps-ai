@@ -12,7 +12,7 @@ from environment_tabular_nav.Q_learn import QLearnTabularNav
 from environment_tabular_nav.rps_gym import RestrictedRPSEnv as TabularEnv
 from environment_dqn_nav.Q_learn import QLearnDQNNav
 from environment_dqn_nav.rrps_gym import RestrictedRPSEnv as DQNEnv
-from gym_core.reward_config import RewardConfig
+from rrps_core.reward_config import RewardConfig
 
 DECAY_RATE = 0.999
 EVAL_EPISODES = 10_000

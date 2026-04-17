@@ -1,8 +1,8 @@
 from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import ProgressBarCallback
-from gym_core.rrps_gym import RRPSEnvCore
+from rrps_core.rrps_gym import RRPSEnvCore
 from typing import Generator
-import gym_core.visualizer as vis
+import rrps_core.visualizer as vis
 
 
 class QLearnDQNNav:

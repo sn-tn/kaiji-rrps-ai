@@ -1,5 +1,5 @@
 from typing import TypedDict
-from gym_core.player import PlayerID, PlayerDict
+from rrps_core.player import PlayerID, PlayerDict
 
 
 class Observation(TypedDict):

@@ -1,4 +1,4 @@
-from gym_core.Q_learn import RRPSQLearnCore
+from rrps_core.Q_learn import RRPSQLearnCore
 from environment_tabular_nav.rps_gym import Observation
 import numpy as np
 

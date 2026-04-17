@@ -5,12 +5,12 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 
-from gym_core.matchup_dict import MatchupDict
-from gym_core.cards import Card
-from gym_core.info import Info, GameStatus
-from gym_core.player import PlayerDict, PlayerID, Budget, Player
-from gym_core.reward_config import RewardConfig as _BaseRewardConfig
-from gym_core.rrps_gym import RRPSEnvCore
+from rrps_core.matchup_dict import MatchupDict
+from rrps_core.cards import Card
+from rrps_core.info import Info, GameStatus
+from rrps_core.player import PlayerDict, PlayerID, Budget, Player
+from rrps_core.reward_config import RewardConfig as _BaseRewardConfig
+from rrps_core.rrps_gym import RRPSEnvCore
 
 
 

@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 
 from environment_dqn_nav.Q_learn import QLearnDQNNav
 from environment_dqn_nav.rrps_gym import RestrictedRPSEnv as DQNEnv
-from gym_core.reward_config import RewardConfig
+from rrps_core.reward_config import RewardConfig
 
 EVAL_EPISODES = 10_000
 
