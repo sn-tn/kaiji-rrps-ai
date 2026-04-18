@@ -16,7 +16,7 @@ parser.add_argument(
 parser.add_argument(
     "--file",
     type=str,
-    default="monty_hall",
+    default="static",
     help="agent name used for save filename",
 )
 parser.add_argument(
@@ -34,12 +34,12 @@ env = StaticRRPSEnv(
     agent_budget={"paper_total": 3, "rock_total": 3, "scissors_total": 3},
     player_budget={"paper_total": 3, "rock_total": 3, "scissors_total": 3},
 )
-monty_hall = QLearnStatic(agent_name=args.file, env=env)
+static = QLearnStatic(agent_name=args.file, env=env)
 
 if args.load:
-    monty_hall.load_from_path(args.load)
+    static.load_from_path(args.load)
 else:
-    monty_hall.tabular_train(
+    static.tabular_train(
         gamma=0.9,
         train_episodes=args.train,
         decay_rate=DECAY_RATE,
@@ -58,7 +58,9 @@ heatmap_counts = [[0] * 3 for _ in range(3)]
 for _ in tqdm(range(100_000)):
     total_reward = 0
     first_matchup = None
-    for obs, reward, terminated, truncated, info in monty_hall.play_agent(gui=args.gui):
+    for obs, reward, terminated, truncated, info in static.play_agent(
+        gui=args.gui
+    ):
         total_reward += reward
         if first_matchup is None and info["matchup_dict"]:
             for (pid1, pid2), (c1, c2) in info["matchup_dict"].items():

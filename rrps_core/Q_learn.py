@@ -138,15 +138,15 @@ class RRPSQLearnCore(Generic[ObsType]):
         total_reward = 0
         terminated = False
         truncated = False
+        self.random_move_count = 0
         while not terminated and not truncated:
             try:
                 action = np.random.choice(
                     self.env.action_space.n, p=self.agent_move(obs)
-                )  # Select action using softmax over Q-values
+                )
             except KeyError:
-                action = (
-                    self.env.action_space.sample()
-                )  # Fallback to random action if state not in Q-table
+                action = self.env.action_space.sample()
+                self.random_move_count += 1
 
             obs, reward, terminated, truncated, info = self.env.step(action)
 

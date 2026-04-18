@@ -1,5 +1,17 @@
 # kaiji-rrps-ai
 
+# Setup
+
+Requires Python 3.13+ and [uv](https://docs.astral.sh/uv/).
+
+To install packages run in root:
+
+```bash
+uv sync
+```
+
+> Make sure `.pickle` and `.zip` model files are git ignored — they can be large enough to break version control.
+
 ## Overview
 
 Three approaches to training an agent to play Restricted Rock Paper Scissors (RRPS), ranging from a static tabular environment to a navigable grid with Deep Q-Learning.
@@ -33,7 +45,7 @@ A navigable grid environment with a tabular Q-learning agent. The agent moves on
 
 ### `environment_dqn_nav/`
 
-A navigable grid environment with a Deep Q-learning agent via Stable-Baselines3. Same matchup logic as tabular nav but with a neural network policy.
+A navigable grid environment with a Deep Q-learning agent via Stable-Baselines3. Same matchup logic as tabular nav but with a DQN.
 
 ### `analysis/`
 
@@ -49,15 +61,17 @@ All scripts are run from the project root. Each supports `--train`, `--file`, `-
 
 ```bash
 uv run -m analysis.static
-uv run -m analysis.static --train 50000
-uv run -m analysis.static --load analysis/monty_hall_100000_0.999.pickle --gui
+uv run -m analysis.static --train 20000
+uv run -m analysis.static --load analysis/static_100000_0.999.pickle --gui
 ```
 
 ### Tabular Nav Q-Learning
 
+[tabular_nav_20000_0.999.pickle download](https://drive.google.com/drive/folders/1UtotVdp7LyLn43jnPGk_qa_U5ed6dY9j)
+
 ```bash
 uv run -m analysis.tabular_nav
-uv run -m analysis.tabular_nav --train 50000
+uv run -m analysis.tabular_nav --train 20000
 uv run -m analysis.tabular_nav --load tabular_nav_20000_0.999.pickle --gui
 ```
 
@@ -82,13 +96,3 @@ uv run -m analysis.compare_base.compare_base_eval
 ```
 
 ---
-
-## Setup
-
-Requires Python 3.13+ and [uv](https://docs.astral.sh/uv/).
-
-```bash
-uv sync
-```
-
-> Make sure `.pickle` and `.zip` model files are git ignored — they can be large enough to break version control.

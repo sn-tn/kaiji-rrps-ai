@@ -50,6 +50,8 @@ rewards = []
 wins = 0
 losses = 0
 truncations = 0
+total_breakdown = {}
+random_moves = 0
 
 for _ in tqdm(range(10_000)):
     total_reward = 0
@@ -62,9 +64,17 @@ for _ in tqdm(range(10_000)):
         losses += 1
     else:
         truncations += 1
+    for k, v in env.reward_breakdown.items():
+        total_breakdown[k] = total_breakdown.get(k, 0) + v
+    random_moves += agent.random_move_count
 
 total = len(rewards)
 avg_reward = sum(rewards) / total
+
+print("\nReward breakdown (total across all eval episodes):")
+for k, v in total_breakdown.items():
+    print(f"  {k:25s} {v:>12.1f}")
+print(f"\n  {'random moves (KeyError)':25s} {random_moves:>12}")
 
 labels = ["Win", "Loss"]
 counts = [wins, losses]

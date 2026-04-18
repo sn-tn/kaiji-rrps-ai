@@ -222,6 +222,16 @@ class RestrictedRPSEnv(RRPSEnvCore):
         super().reset(seed=seed)
         self._initialize_players()
         self._turn = 0
+        self.reward_breakdown = {
+            "win_matchup": 0.0,
+            "lose_matchup": 0.0,
+            "tie_matchup": 0.0,
+            "victory": 0.0,
+            "eliminated": 0.0,
+            "invalid_move": 0.0,
+            "approach_opponent": 0.0,
+            "within_challenge_range": 0.0,
+        }
         if self.render_mode == "human":
             self.render()
         return self._get_obs(), {}
@@ -244,6 +254,7 @@ class RestrictedRPSEnv(RRPSEnvCore):
 
         if agent[card.value] == 0:
             reward += self.reward_config.invalid_move
+            self.reward_breakdown["invalid_move"] += self.reward_config.invalid_move
             available = [c for c in Card if agent[c.value] > 0]
             card = random.choice(available) if available else card
 
@@ -297,10 +308,13 @@ class RestrictedRPSEnv(RRPSEnvCore):
             delta = agent_stars_after - agent_stars_before
             if delta > 0:
                 reward += self.reward_config.win_matchup
+                self.reward_breakdown["win_matchup"] += self.reward_config.win_matchup
             elif delta < 0:
                 reward += self.reward_config.lose_matchup
+                self.reward_breakdown["lose_matchup"] += self.reward_config.lose_matchup
             else:
                 reward += self.reward_config.tie_matchup
+                self.reward_breakdown["tie_matchup"] += self.reward_config.tie_matchup
 
         # ── Update alive dict ─────────────────────────────────────────────────
         self._update_playing()
@@ -316,19 +330,22 @@ class RestrictedRPSEnv(RRPSEnvCore):
                 if agent["stars_total"] >= self.initial_stars
                 else "eliminated"
             )
-            reward += (
-                self.reward_config.victory
-                if game_status == "victory"
-                else self.reward_config.eliminated
-            )
+            if game_status == "victory":
+                reward += self.reward_config.victory
+                self.reward_breakdown["victory"] += self.reward_config.victory
+            else:
+                reward += self.reward_config.eliminated
+                self.reward_breakdown["eliminated"] += self.reward_config.eliminated
         elif len(self.still_playing_dict) == 1:
             terminated = True
             game_status = "victory"
             reward += self.reward_config.victory
+            self.reward_breakdown["victory"] += self.reward_config.victory
         elif self._turn >= self.max_turns:
             terminated = True
             game_status = "eliminated"
             reward += self.reward_config.eliminated
+            self.reward_breakdown["eliminated"] += self.reward_config.eliminated
 
         obs = self._get_obs()
         info = self._get_info(
