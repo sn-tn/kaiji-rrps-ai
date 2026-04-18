@@ -53,7 +53,7 @@ truncations = 0
 
 for _ in tqdm(range(10_000)):
     total_reward = 0
-    for obs, reward, terminated, truncated, info in agent.play_agent():
+    for obs, reward, terminated, truncated, info in agent.play_agent(gui=args.gui):
         total_reward += reward
     rewards.append(total_reward)
     if info["game_status"] == "victory":

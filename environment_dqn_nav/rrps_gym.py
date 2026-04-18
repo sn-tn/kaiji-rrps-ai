@@ -1,15 +1,16 @@
 from __future__ import annotations
+import copy
 import random
 from dataclasses import dataclass
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 
-from rrps_core.matchup_dict import MatchupDict
-from rrps_core.cards import Card
-from rrps_core.info import Info, GameStatus
-from rrps_core.player import PlayerDict, PlayerID, Budget, Player
-from rrps_core.reward_config import RewardConfig as _BaseRewardConfig
+from rrps_core.types.matchup_dict import MatchupDict
+from rrps_core.types.cards import Card
+from rrps_core.types.info import Info, GameStatus
+from rrps_core.types.player import PlayerDict, PlayerID, Budget, Player
+from rrps_core.reward_config import RewardConfig
 from rrps_core.rrps_gym import RRPSEnvCore
 
 
@@ -244,7 +245,7 @@ class RestrictedRPSEnv(RRPSEnvCore):
         game_status: GameStatus = "playing"
         matchup_dict: MatchupDict = {}
 
-        initial_alive_player_dict: PlayerDict = self.still_playing_dict.copy()
+        initial_alive_player_dict: PlayerDict = copy.deepcopy(self.still_playing_dict)
         agent = self.player_dict[0]
 
         # ── Decode action: direction * 3 + card ──────────────────────────

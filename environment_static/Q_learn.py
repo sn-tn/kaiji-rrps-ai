@@ -8,6 +8,7 @@ class QLearnStatic(RRPSQLearnCore[Observation]):
     def hash(self, obs):
         agent = obs["player_dict"][0]
         initial = self.env.initial_player_budget
+
         opponents = sorted(
             ((pid, p) for pid, p in obs["player_dict"].items() if pid != 0),
             key=lambda x: x[0],

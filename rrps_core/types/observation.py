@@ -1,5 +1,5 @@
 from typing import TypedDict
-from rrps_core.player import PlayerID, PlayerDict
+from rrps_core.types.player import PlayerID, PlayerDict
 
 
 class Observation(TypedDict):

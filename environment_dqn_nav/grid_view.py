@@ -1,7 +1,7 @@
 import pygame
 from pathlib import Path
 
-from rrps_core.cards import Card
+from rrps_core.types.cards import Card
 
 _surface = None
 _clock = None

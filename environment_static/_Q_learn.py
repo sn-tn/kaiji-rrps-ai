@@ -3,7 +3,7 @@ from tqdm import tqdm
 import numpy as np
 import sys
 import pickle
-from rrps_core.observation import Observation
+from rrps_core.types.observation import Observation
 import rrps_core.visualizer as vis
 
 env = RestrictedRPSEnv(n_opponents=1, stars=3)

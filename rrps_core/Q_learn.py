@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from abc import ABC, abstractmethod
-from rrps_core.info import Info
+from rrps_core.types.info import Info
 import gymnasium as gym
 from rrps_core.rrps_gym import RRPSEnvCore
 from typing import TypeVar, Generic, Generator
@@ -150,10 +150,10 @@ class RRPSQLearnCore(Generic[ObsType]):
 
             obs, reward, terminated, truncated, info = self.env.step(action)
 
-            yield obs, reward, terminated, truncated, info
-
             if gui:
                 self.render_gui(terminated, truncated, info)
+
+            yield obs, reward, terminated, truncated, info
             total_reward += reward
         return self
 

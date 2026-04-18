@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TypeAlias
-from rrps_core.player import PlayerID
-from rrps_core.cards import Card
+from rrps_core.types.player import PlayerID
+from rrps_core.types.cards import Card
 import pandera as pa
 from pandera.typing import DataFrame, Series
 
